@@ -4,7 +4,7 @@ Why the code is shaped the way it is. Each entry: **decision**, **why**, **what 
 
 ## 1. A pipeline of small agents, not one big prompt
 
-A story request goes through five single-purpose steps, each a function in `storyteller/agents.py`:
+A story request goes through five single-purpose steps, each one small function in `storyteller/agents.py`:
 
 | Agent | Input | Output | Why it is separate |
 |---|---|---|---|
@@ -12,16 +12,16 @@ A story request goes through five single-purpose steps, each a function in `stor
 | Narrator | bible + history + player action | one scene of prose | The creative step; runs at high temperature. |
 | Critic | the draft + the same context | JSON `{score, coherent, issues, fix}` | A model reviewing a finished draft catches contradictions it would not avoid while writing. Runs at low temperature. |
 | Director | the approved scene | JSON `{mood, choices}` | Cheap structured output the UI needs; keeps the narrator focused on prose. |
-| Safety judge | request / typed action | JSON `{allowed}` | See decision 7. |
+| Safety judge (`is_allowed`) | request / typed action | JSON `{allowed}` | See decision 7. |
 
 *Cost:* 3+ model calls per scene (narrator, critic, director, plus rewrites) instead of 1.
-*Where:* `agents.py` (the agents), `pipeline.py` (how they are chained).
+*Where:* `agents.py` (the steps), `pipeline.py` (how narrator and critic are chained).
 
 ## 2. The story bible is the story's memory
 
 All agents read the same `StorySession` (`story.py`): the bible plus the list of scenes written so far. Agents never
 talk to each other directly. This makes each agent testable alone and makes the data flow visible: planner writes
-`bible`, narrator reads it, `commit()` appends scenes, critic and director read both.
+`bible`, narrator reads it, `add_scene()` appends scenes and remembers the choices, critic and director read both.
 The bible has a fixed `arc` with one beat per scene, so a 5-scene story always has a beginning, a middle and a real
 ending (the last beat must resolve the conflict).
 *Cost:* the full history is re-sent every scene. Fine for 5 scenes; longer stories need summarization.
@@ -35,8 +35,8 @@ is shown. Details that matter:
   draft can't beat a plain consistent one.
 - If the critic call fails (network, bad JSON), the current draft is shown. A quality feature must not be able to
   break the product.
-- The loop is a generator that yields status lines ("The critic is reviewing draft 2...") so the UI is not a blank
-  wait, and returns the result at the end.
+- The loop is a generator. It yields status lines ("The critic is reviewing draft 2...") so the UI is not a blank
+  wait, then yields the finished scene as its last item.
 
 *Cost:* latency (no token streaming - a scene appears once approved) and extra calls. Streaming was removed
 deliberately: you cannot show text that might be rejected.
@@ -99,8 +99,9 @@ lines of ordinary Python in `pipeline.py` and `agents.py`, which is easier to re
 
 ## 11. What the tests cover
 
-`tests/test_core.py` runs without any network: JSON extraction, session logic, HTML escaping and mood class, prologue
-rendering, and the critic loop (reject-then-approve, give up and keep best draft, broken critic). Model calls are
+`tests/test_core.py` runs without any network: JSON extraction, session logic, HTML escaping, mood/name/prologue rendering, the critic loop
+(reject-then-approve, give up and keep the best draft, incoherent-draft ranking, broken critic), the strict `coherent`
+flag, provider switching, and one UI turn (success, and failure with the choices restored). Model calls are
 replaced with fakes (`monkeypatch`), so the tests check *our* control flow, not a model's output. Output *quality* is
 checked by running the app, not by unit tests.
 

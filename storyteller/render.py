@@ -38,22 +38,22 @@ def _paras(text: str) -> str:
     return "".join(f"<p>{html.escape(p)}</p>" for p in text.split("\n\n") if p.strip())
 
 
-def render(session: StorySession | None, live: str = "", mood: str = "mystery") -> str:
+def _scene(scene) -> str:
+    action = f'<p class="action">&rsaquo; {html.escape(scene.choice)}</p>' if scene.choice else ""
+    return action + _paras(scene.text)
+
+
+def render(session: StorySession | None, writing: bool = False) -> str:
+    """The whole stage. While `writing`, every committed scene is history and a blinking cursor stands in for the next."""
     if session is None:
         return '<div class="stage mood-mystery"><h2>Echoes</h2><p>Name a world, and step inside.</p></div>'
-    # while streaming, every committed scene is history; otherwise the last one is "current"
-    history = session.scenes if live else session.scenes[:-1]
-    past = "".join((f'<p class="action">&rsaquo; {html.escape(s.choice)}</p>' if s.choice else "") + _paras(s.text) for s in history)
-    current = ""
-    if live:
-        current = _paras(live) + '<span class="cursor"></span>'
-    elif session.scenes:
-        last = session.scenes[-1]
-        current = (f'<p class="action">&rsaquo; {html.escape(last.choice)}</p>' if last.choice else "") + _paras(last.text)
-    summary = f"<details><summary>The story so far</summary>{past}</details>" if past else ""
+    scenes = session.scenes
+    past = "".join(_scene(s) for s in (scenes if writing else scenes[:-1]))
+    current = _paras("...") + '<span class="cursor"></span>' if writing else (_scene(scenes[-1]) if scenes else "")
     name = session.bible.get("protagonist_name")
     who = f" &middot; you are {html.escape(str(name))}" if name else ""
-    prologue = (f'<details class="prologue"{" open" if len(session.scenes) <= 1 else ""}>'
+    prologue = (f'<details class="prologue"{" open" if len(scenes) <= 1 else ""}>'
                 f"<summary>Prologue &mdash; the world</summary>{_paras(session.prologue)}</details>") if session.prologue else ""
-    return (f'<div class="stage mood-{mood}"><h2>{html.escape(session.title)}</h2><div class="tag">{mood}{who}</div>'
-            f"{prologue}{summary}{current}</div>")
+    summary = f"<details><summary>The story so far</summary>{past}</details>" if past else ""
+    return (f'<div class="stage mood-{session.mood}"><h2>{html.escape(session.title)}</h2>'
+            f'<div class="tag">{session.mood}{who}</div>{prologue}{summary}{current}</div>')

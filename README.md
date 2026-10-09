@@ -40,17 +40,16 @@ A static story is read; an immersive one is *inhabited*. Echoes does that throug
 ## Where to look first
 
 ```
-app.py                  Web UI (Gradio). One click -> safety check -> pipeline -> re-render.
+app.py                  Web UI (Gradio). One click -> take_turn(): safety check -> pipeline -> re-render.
 storyteller/
   prompts.py            EVERY prompt the app sends to a model. Edit here to change how stories read.
-  agents.py             The agents, one small function each: plan, narrate, critique, direct
+  agents.py             The model-backed steps, one small function each: is_allowed, plan, narrate, critique, direct
   pipeline.py           How one scene is made: narrator drafts -> critic scores -> rewrite if weak -> director
-  safety.py             Guard on the request and every typed action
-  story.py              StorySession: the shared memory (story bible + scenes so far)
+  story.py              StorySession: the shared memory (story bible, scenes so far, current choices)
   render.py             HTML/CSS stage; the mood class drives colours and animation
   llm.py                The only file that calls a model provider
   config.py             Settings from .env: providers, per-agent models, story length, critic thresholds
-tests/                  Network-free tests (parsing, session, HTML escaping, the critic loop)
+tests/                  Network-free tests (parsing, session, HTML escaping, the critic loop, a full UI turn)
 ENGINEERING_DECISIONS.md  Why it is built this way, with trade-offs
 ```
 

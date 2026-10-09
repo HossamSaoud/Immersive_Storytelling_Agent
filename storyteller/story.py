@@ -16,7 +16,7 @@ class Scene:
 @dataclass
 class StorySession:
     topic: str
-    bible: dict  # planner output: title, setting, protagonist, conflict, arc (one beat per scene)
+    bible: dict  # planner output: title, world, protagonist_name, cast, conflict, prologue, arc (one beat per scene)
     scenes: list[Scene] = field(default_factory=list)
     choices: list[str] = field(default_factory=list)  # buttons offered after the last scene
 
@@ -39,3 +39,7 @@ class StorySession:
     @property
     def mood(self) -> str:
         return self.scenes[-1].mood if self.scenes else "mystery"
+
+    def add_scene(self, text: str, direction: dict, choice: str) -> None:
+        self.scenes.append(Scene(text, direction["mood"], choice))
+        self.choices = direction["choices"]

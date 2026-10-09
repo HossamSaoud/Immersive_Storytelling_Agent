@@ -1,8 +1,5 @@
-"""The ONLY file that talks to a model provider. Everything else calls chat()/chat_json() with a role name.
-
-A "role" is one of the agents ("planner", "narrator", "critic", "director", "safety"); config.MODELS maps each role
-to a model name, so switching a model never touches agent code.
-"""
+"""The ONLY file that talks to a model provider. Agents call chat() with a role ("critic"), never a model name;
+config.MODELS maps each role to a model, so switching models never touches agent code."""
 import json
 import re
 from functools import lru_cache
@@ -14,7 +11,6 @@ from . import config
 
 @lru_cache(maxsize=1)
 def client() -> OpenAI:
-    """One OpenAI-compatible client for whichever provider config.py selected."""
     return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.API_KEY)
 
 
@@ -29,22 +25,13 @@ def extract_json(text: str) -> dict:
         return json.loads(match.group(0))
 
 
-def _messages(system: str, user: str) -> list[dict]:
-    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
-
-
-def chat_json(role: str, system: str, user: str, temperature: float = 0.8) -> dict:
-    """Ask `role`'s model for a JSON object."""
+def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False):
+    """Ask `role`'s model. Returns the text, or a dict when as_json=True."""
     resp = client().chat.completions.create(
-        model=config.MODELS[role], messages=_messages(system, user),
-        response_format={"type": "json_object"}, temperature=temperature,
+        model=config.MODELS[role],
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        temperature=temperature,
+        **({"response_format": {"type": "json_object"}} if as_json else {}),
     )
-    return extract_json(resp.choices[0].message.content)
-
-
-def chat(role: str, system: str, user: str, temperature: float = 0.95) -> str:
-    """Ask `role`'s model for plain text."""
-    resp = client().chat.completions.create(
-        model=config.MODELS[role], messages=_messages(system, user), temperature=temperature,
-    )
-    return (resp.choices[0].message.content or "").strip()
+    text = (resp.choices[0].message.content or "").strip()
+    return extract_json(text) if as_json else text

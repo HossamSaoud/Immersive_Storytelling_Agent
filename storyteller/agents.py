@@ -1,39 +1,44 @@
-"""The four story agents. Each is one small function: build a prompt (prompts.py), call a model (llm.py), tidy the result.
+"""The model-backed steps. Each is one small function: build a prompt (prompts.py), call a model (llm.py), tidy the result.
 
-  plan       Planner   request              -> StorySession holding the story bible
-  narrate    Narrator  session + action     -> one scene of prose (or a rewrite of a rejected draft)
-  critique   Critic    session + draft      -> {score, coherent, issues, fix}
-  direct     Director  session + scene      -> {mood, choices}
+  is_allowed  Safety    request / typed action -> bool
+  plan        Planner   request                -> StorySession holding the story bible
+  narrate     Narrator  session + action       -> one scene of prose (or a rewrite of a rejected draft)
+  critique    Critic    session + draft        -> {score, coherent, issues, fix}
+  direct      Director  session + scene        -> {mood, choices}
 
-They share state only through StorySession (story.py), so any of them can be swapped or tested on its own.
-How they are chained - draft, review, rewrite - is in pipeline.py.
+They share state only through StorySession (story.py). How narrate and critique are chained is in pipeline.py.
 """
 from . import config, llm, prompts
-from .story import MOODS, Scene, StorySession
+from .story import MOODS, StorySession
+
+REFUSAL = "I can't weave a story around that. Try another idea - a mystery, a voyage, a strange city?"
+
+
+def is_allowed(text: str) -> bool:
+    """OpenAI's free moderation endpoint when the provider is OpenAI, otherwise (or if it errors) an LLM yes/no judge."""
+    if config.LLM_PROVIDER == "openai":
+        try:
+            return not llm.client().moderations.create(model="omni-moderation-latest", input=text).results[0].flagged
+        except Exception:
+            pass
+    return bool(llm.chat("safety", prompts.SAFETY_SYSTEM, text, temperature=0, as_json=True).get("allowed", False))
 
 
 def plan(topic: str) -> StorySession:
-    bible = llm.chat_json("planner", prompts.planner_system(config.MAX_SCENES), prompts.planner_user(topic))
+    bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True)
     return StorySession(topic=topic, bible=bible)
 
 
 def narrate(session: StorySession, choice: str, draft: str = "", notes: str = "") -> str:
     """Write the next scene. Pass the rejected `draft` and the critic's `notes` to rewrite instead."""
-    return llm.chat(
-        "narrator",
-        prompts.narrator_system(session.is_last),
-        prompts.narrator_user(session, choice, config.MAX_SCENES, draft, notes),
-    )
+    return llm.chat("narrator", prompts.narrator_system(session.is_last),
+                    prompts.narrator_user(session, choice, draft, notes), temperature=0.95)
 
 
 def critique(session: StorySession, scene_text: str, choice: str) -> dict:
-    """Returns {score: 1-10, coherent: bool, issues: [str], fix: str}. Raises if the critic call itself fails."""
-    out = llm.chat_json(
-        "critic",
-        prompts.critic_system(session.is_last),
-        prompts.critic_user(session, scene_text, choice),
-        temperature=0.2,  # reviews should be steady, not creative
-    )
+    """Returns {score: 1-10, coherent, issues, fix}. Raises if the critic call itself fails."""
+    out = llm.chat("critic", prompts.critic_system(session.is_last),
+                   prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True)
     return {
         "score": int(out.get("score", 0)),
         "coherent": out.get("coherent") is True,  # bool("false") is True, so accept only a real JSON true
@@ -44,16 +49,9 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
 
 def direct(session: StorySession, scene_text: str) -> dict:
     """Returns {mood, choices}. The final scene gets no choices - the story is over."""
-    out = llm.chat_json(
-        "director", prompts.director_system(), prompts.director_user(session, scene_text), temperature=0.6,
-    )
-    if out.get("mood") not in MOODS:
-        out["mood"] = "mystery"
-    out["choices"] = [] if session.is_last else [str(c) for c in out.get("choices", [])][:3]
-    return out
-
-
-def commit(session: StorySession, text: str, direction: dict, choice: str) -> None:
-    """Add an approved scene to the story's memory."""
-    session.scenes.append(Scene(text=text, mood=direction["mood"], choice=choice))
-    session.choices = direction["choices"]
+    out = llm.chat("director", prompts.director_system(), prompts.director_user(session, scene_text),
+                   temperature=0.6, as_json=True)
+    return {
+        "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
+        "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:3],
+    }

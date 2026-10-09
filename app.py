@@ -1,11 +1,11 @@
 """Gradio front end - the only file that knows about the web UI. Run: python app.py
 
-Flow per click:  start()/choose()  ->  safety check  ->  play()  ->  pipeline.write_scene()  (narrator <-> critic loop)
-Each yield below re-renders the page, which is how the status lines ("The critic is reviewing...") appear live.
+One click -> take_turn() -> safety check -> (plan the story on the first turn) -> pipeline.write_scene() (narrator <-> critic).
+Each yield re-renders the page, which is how status lines like "The critic is reviewing..." appear live.
 """
 import gradio as gr
 
-from storyteller import agents, config, pipeline, safety
+from storyteller import agents, config, pipeline
 from storyteller.render import CSS, render
 
 EXAMPLES = [
@@ -15,9 +15,11 @@ EXAMPLES = [
 ]
 
 
-def out(session, stage, status="", choices=()):
+def out(session, status="", writing=False):
+    """One UI update: (state, stage, status, 3 choice buttons, free-text row). The buttons come from session.choices."""
+    choices = [] if writing or session is None else session.choices
     buttons = [gr.update(value=choices[i], visible=True) if i < len(choices) else gr.update(visible=False) for i in range(3)]
-    return (session, stage, status, *buttons, gr.update(visible=bool(choices)))
+    return (session, render(session, writing), status, *buttons, gr.update(visible=bool(choices)))
 
 
 def explain(e: Exception) -> str:
@@ -29,54 +31,34 @@ def explain(e: Exception) -> str:
     return f"The storyteller hit a problem ({type(e).__name__}: {str(e)[:160]}). Please try again."
 
 
-def play(session, choice):
-    """One turn: narrator drafts, critic reviews (and sends back weak drafts), then the approved scene is shown."""
-    writer = pipeline.write_scene(session, choice)
-    while True:
-        try:
-            status = next(writer)
-        except StopIteration as done:
-            text, direction, review = done.value
-            break
-        yield out(session, render(session, "...", session.mood), status)
-    agents.commit(session, text, direction, choice)  # mood change re-tints the stage here
-    choices = direction["choices"]
-    status = f"*{review}*"
-    if session.is_last and not choices:
-        status += "  \nThe end. Start a new story above."
-    yield out(session, render(session), status, choices)
+def take_turn(session, text):
+    """Begin (session None, text = the story request) or continue (text = a chosen or typed action)."""
+    text, before = (text or "").strip(), session
+    if not text:
+        yield out(session)
+        return
+    try:
+        if not agents.is_allowed(text):
+            yield out(session, agents.REFUSAL)
+            return
+        if session is None:
+            yield out(None, "Weaving your world...")
+            session, text = agents.plan(text), ""
+        for item in pipeline.write_scene(session, text):
+            if isinstance(item, str):
+                yield out(session, item, writing=True)
+            else:
+                scene, direction, review = item
+        session.add_scene(scene, direction, text)  # the mood change re-tints the stage here
+        end = "" if direction["choices"] else "  \nThe end. Start a new story above."
+        yield out(session, f"*{review}*{end}")
+    except Exception as e:  # nothing was committed, so the player can simply retry
+        print(f"[app] turn failed: {e!r}")
+        yield out(before, explain(e))
 
 
 def start(topic):
-    topic = (topic or "").strip()
-    if not topic:
-        yield out(None, render(None), "Give me a topic first.")
-        return
-    try:
-        if not safety.is_allowed(topic):
-            yield out(None, render(None), safety.REFUSAL)
-            return
-        yield out(None, render(None), "Weaving your world...")
-        session = agents.plan(topic)
-        yield from play(session, "")
-    except Exception as e:
-        print(f"[app] start failed: {e!r}")
-        yield out(None, render(None), explain(e))
-
-
-def choose(session, choice):
-    choice = (choice or "").strip()
-    if session is None or not choice:
-        yield out(session, render(session, "", session.mood if session else "mystery"), choices=session.choices if session else [])
-        return
-    try:
-        if not safety.is_allowed(choice):
-            yield out(session, render(session), safety.REFUSAL, session.choices)
-            return
-        yield from play(session, choice)
-    except Exception as e:  # the scene was not committed, so the player can simply retry
-        print(f"[app] choose failed: {e!r}")
-        yield out(session, render(session), explain(e), session.choices)
+    yield from take_turn(None, topic)
 
 
 with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
@@ -97,8 +79,8 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
     begin.click(start, [topic], outputs)
     topic.submit(start, [topic], outputs)
     for btn in b:
-        btn.click(choose, [session, btn], outputs)
-    free.submit(choose, [session, free], outputs).then(lambda: "", None, free)
+        btn.click(take_turn, [session, btn], outputs)
+    free.submit(take_turn, [session, free], outputs).then(lambda: "", None, free)
 
 if __name__ == "__main__":
     demo.queue().launch(inbrowser=True)
