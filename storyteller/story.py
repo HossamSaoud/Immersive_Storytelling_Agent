@@ -1,0 +1,40 @@
+"""Plain data for one playthrough. The session is the agents' shared memory."""
+from dataclasses import dataclass, field
+
+from . import config
+
+MOODS = ["calm", "wonder", "mystery", "tense", "danger", "melancholy", "joy", "triumph"]
+
+
+@dataclass
+class Scene:
+    text: str
+    mood: str
+    choice: str  # what the player did to get here ("" for the opening scene)
+
+
+@dataclass
+class StorySession:
+    topic: str
+    bible: dict  # planner output: title, setting, protagonist, conflict, arc (one beat per scene)
+    scenes: list[Scene] = field(default_factory=list)
+
+    @property
+    def title(self) -> str:
+        return self.bible.get("title", "Untitled")
+
+    @property
+    def prologue(self) -> str:
+        return str(self.bible.get("prologue", ""))
+
+    @property
+    def scene_no(self) -> int:  # 1-based number of the scene about to be written
+        return len(self.scenes) + 1
+
+    @property
+    def is_last(self) -> bool:
+        return self.scene_no >= config.MAX_SCENES
+
+    @property
+    def mood(self) -> str:
+        return self.scenes[-1].mood if self.scenes else "mystery"
