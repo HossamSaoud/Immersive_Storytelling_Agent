@@ -75,8 +75,9 @@ models) were left out.
 1. **Safety judge** on the initial request and every typed action. Uses OpenAI's moderation endpoint when the
    provider is OpenAI (free, purpose-built), otherwise an LLM yes/no judge (`SAFETY_SYSTEM`).
 2. **Content rules** inside the planner and narrator prompts, so unsafe text is also discouraged at generation time.
-No single layer is trusted alone. The suggested choice buttons are model output and are not re-screened; only text
-the player types is.
+No single layer is trusted alone. Every action is screened, including the suggested buttons (they are model output
+too), at the price of one extra model call per click. If a model call fails or an action is refused, the player's
+last choices are shown again so they can retry.
 
 ## 8. JSON from models is parsed defensively
 

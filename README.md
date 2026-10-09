@@ -69,7 +69,7 @@ instead of generated media, and no agent framework.
 
 I used Claude Code to scaffold and write the code. The following were my own decisions: the interpretation of immersion (the four layers above),
 the planner/narrator/director split, mood-driven UI, the scene limit, the safety layering, and the choice of an OpenAI-compatible abstraction.
-I reviewed and tested the generated code (unit tests plus a live end-to-end run with a local model).
+I reviewed and tested the generated code (unit tests plus live end-to-end runs against Groq's `openai/gpt-oss-120b`).
 
 ## External services, models, libraries
 
@@ -84,4 +84,4 @@ Any OpenAI-compatible provider: OpenAI (`gpt-4o-mini`, `omni-moderation-latest`)
 
 ## Demonstration
 
-See `demo/` (screen recording of two requests) or the private link here: _<add link>_.
+_Add the link to your screen recording here before submitting._

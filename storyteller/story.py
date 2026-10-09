@@ -18,6 +18,7 @@ class StorySession:
     topic: str
     bible: dict  # planner output: title, setting, protagonist, conflict, arc (one beat per scene)
     scenes: list[Scene] = field(default_factory=list)
+    choices: list[str] = field(default_factory=list)  # buttons offered after the last scene
 
     @property
     def title(self) -> str:

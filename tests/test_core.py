@@ -83,6 +83,7 @@ def test_provider_and_per_agent_model_switching(monkeypatch):
     import importlib
     for k in ("LLM_BASE_URL", "STORY_MODEL", "CRITIC_MODEL", "GROQ_API_KEY"):
         monkeypatch.delenv(k, raising=False)
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: None)  # ignore the developer's own .env
     monkeypatch.setenv("LLM_PROVIDER", "groq")
     monkeypatch.setenv("GROQ_API_KEY", "gsk_test")
     monkeypatch.setenv("CRITIC_MODEL", "big-model")
@@ -93,3 +94,17 @@ def test_provider_and_per_agent_model_switching(monkeypatch):
     finally:
         monkeypatch.undo()
         importlib.reload(config)
+
+
+def test_critic_incoherent_string_is_not_coherent(monkeypatch):
+    from storyteller import agents, llm
+    s = StorySession("t", {"title": "T"})
+    monkeypatch.setattr(llm, "chat_json", lambda *a, **k: {"score": 9, "coherent": "false", "issues": [], "fix": ""})
+    assert agents.critique(s, "text", "")["coherent"] is False
+
+
+def test_commit_remembers_choices_for_retry():
+    from storyteller import agents
+    s = StorySession("t", {"title": "T"})
+    agents.commit(s, "x", {"mood": "calm", "choices": ["a", "b"]}, "")
+    assert s.choices == ["a", "b"]

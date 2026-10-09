@@ -36,7 +36,7 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
     )
     return {
         "score": int(out.get("score", 0)),
-        "coherent": bool(out.get("coherent", False)),
+        "coherent": out.get("coherent") is True,  # bool("false") is True, so accept only a real JSON true
         "issues": [str(i) for i in out.get("issues", [])],
         "fix": str(out.get("fix", "")),
     }
@@ -56,3 +56,4 @@ def direct(session: StorySession, scene_text: str) -> dict:
 def commit(session: StorySession, text: str, direction: dict, choice: str) -> None:
     """Add an approved scene to the story's memory."""
     session.scenes.append(Scene(text=text, mood=direction["mood"], choice=choice))
+    session.choices = direction["choices"]

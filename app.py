@@ -5,7 +5,7 @@ Each yield below re-renders the page, which is how the status lines ("The critic
 """
 import gradio as gr
 
-from storyteller import agents, pipeline, safety
+from storyteller import agents, config, pipeline, safety
 from storyteller.render import CSS, render
 
 EXAMPLES = [
@@ -18,6 +18,15 @@ EXAMPLES = [
 def out(session, stage, status="", choices=()):
     buttons = [gr.update(value=choices[i], visible=True) if i < len(choices) else gr.update(visible=False) for i in range(3)]
     return (session, stage, status, *buttons, gr.update(visible=bool(choices)))
+
+
+def explain(e: Exception) -> str:
+    """A player-readable reason for a failed model call."""
+    if config.API_KEY == "local" and config.LLM_PROVIDER != "ollama":
+        return f"No API key found for provider '{config.LLM_PROVIDER}'. Add it to .env and restart the app."
+    if getattr(e, "status_code", None) == 429:
+        return "The model provider's rate limit was reached (free tiers have daily token caps). Wait a while, or switch provider or model in .env, then try again."
+    return f"The storyteller hit a problem ({type(e).__name__}: {str(e)[:160]}). Please try again."
 
 
 def play(session, choice):
@@ -43,23 +52,31 @@ def start(topic):
     if not topic:
         yield out(None, render(None), "Give me a topic first.")
         return
-    if not safety.is_allowed(topic):
-        yield out(None, render(None), safety.REFUSAL)
-        return
-    yield out(None, render(None), "Weaving your world...")
-    session = agents.plan(topic)
-    yield from play(session, "")
+    try:
+        if not safety.is_allowed(topic):
+            yield out(None, render(None), safety.REFUSAL)
+            return
+        yield out(None, render(None), "Weaving your world...")
+        session = agents.plan(topic)
+        yield from play(session, "")
+    except Exception as e:
+        print(f"[app] start failed: {e!r}")
+        yield out(None, render(None), explain(e))
 
 
 def choose(session, choice):
     choice = (choice or "").strip()
     if session is None or not choice:
-        yield out(session, render(session, "", session.mood if session else "mystery"))
+        yield out(session, render(session, "", session.mood if session else "mystery"), choices=session.choices if session else [])
         return
-    if not safety.is_allowed(choice):
-        yield out(session, render(session), safety.REFUSAL, [])
-        return
-    yield from play(session, choice)
+    try:
+        if not safety.is_allowed(choice):
+            yield out(session, render(session), safety.REFUSAL, session.choices)
+            return
+        yield from play(session, choice)
+    except Exception as e:  # the scene was not committed, so the player can simply retry
+        print(f"[app] choose failed: {e!r}")
+        yield out(session, render(session), explain(e), session.choices)
 
 
 with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
