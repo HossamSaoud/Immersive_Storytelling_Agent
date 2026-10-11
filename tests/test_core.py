@@ -49,7 +49,7 @@ def test_render_escapes_html_and_shows_mood_name_and_prologue():
     s = StorySession("t", {"title": "T", "protagonist_name": "Mara <b>", "prologue": "You are in <i>Brinehaven</i>."})
     s.add_scene("<script>alert(1)</script>", {"mood": "danger", "choices": []}, "")
     html = render(s)
-    assert "mood-danger" in html and "you are Mara &lt;b&gt;" in html and "Prologue" in html
+    assert "mood-danger" in html and "chatting with Mara &lt;b&gt;" in html and "Prologue" in html
     assert "<script>" not in html and "<i>" not in html
 
 
@@ -96,12 +96,12 @@ def test_provider_and_per_agent_model_switching(monkeypatch):
 
 def test_first_turn_plans_story_and_commits_scene(monkeypatch, story):
     import app
-    scene = ("Scene one.", {"mood": "tense", "choices": ["a", "b", "c"]}, "ok")
+    scene = ("Scene one.", {"mood": "tense", "choices": ["a", "b"]}, "ok")
     monkeypatch.setattr(agents, "is_allowed", lambda t: True)
     monkeypatch.setattr(agents, "plan", lambda t: story)
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: iter(["working", scene]))
     *_, last = app.take_turn(None, "a fox")
-    assert last[0] is story and story.mood == "tense" and story.choices == ["a", "b", "c"] and last[3]["visible"]
+    assert last[0] is story and story.mood == "tense" and story.choices == ["a", "b"] and last[3]["visible"]
 
 
 def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):

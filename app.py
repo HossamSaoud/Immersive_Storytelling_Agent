@@ -9,17 +9,17 @@ from storyteller import agents, config, pipeline
 from storyteller.render import CSS, render
 
 EXAMPLES = [
-    "An unexpected journey through a futuristic city",
-    "A lighthouse keeper who receives a letter from the sea",
-    "A heist in a library that rearranges itself at night",
+    "An astronaut stranded on an alien moon",
+    "A lighthouse keeper cut off by a storm and a stranger on the rocks",
+    "A night-shift nurse locked in a hospital that is slowly changing",
 ]
 
 
 def out(session, status="", writing=False):
-    """One UI update: (state, stage, status, 3 choice buttons, free-text row). The buttons come from session.choices."""
+    """One UI update: (state, stage, status, 2 reply buttons). The buttons come from session.choices."""
     choices = [] if writing or session is None else session.choices
-    buttons = [gr.update(value=choices[i], visible=True) if i < len(choices) else gr.update(visible=False) for i in range(3)]
-    return (session, render(session, writing), status, *buttons, gr.update(visible=bool(choices)))
+    buttons = [gr.update(value=choices[i], visible=True) if i < len(choices) else gr.update(visible=False) for i in range(2)]
+    return (session, render(session, writing), status, *buttons)
 
 
 def explain(e: Exception) -> str:
@@ -62,7 +62,7 @@ def start(topic):
 
 
 with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
-    gr.Markdown("# Echoes\nAn interactive story that listens, adapts, and changes its atmosphere as you play.")
+    gr.Markdown("# Echoes\nA stranger messages you for help. Your replies decide what happens to them.")
     session = gr.State(None)
     with gr.Row():
         topic = gr.Textbox(label="Your story request", placeholder=EXAMPLES[0], scale=4)
@@ -71,16 +71,13 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
     stage = gr.HTML(render(None))
     status = gr.Markdown()
     with gr.Row():
-        b = [gr.Button(visible=False) for _ in range(3)]
-    with gr.Row(visible=False) as free_row:
-        free = gr.Textbox(label="...or do something else", placeholder="Type your own action and press Enter")
+        b = [gr.Button(visible=False) for _ in range(2)]
 
-    outputs = [session, stage, status, *b, free_row]
+    outputs = [session, stage, status, *b]
     begin.click(start, [topic], outputs)
     topic.submit(start, [topic], outputs)
     for btn in b:
         btn.click(take_turn, [session, btn], outputs)
-    free.submit(take_turn, [session, free], outputs).then(lambda: "", None, free)
 
 if __name__ == "__main__":
     demo.queue().launch(inbrowser=True)
