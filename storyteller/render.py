@@ -20,6 +20,8 @@ CSS = "\n".join(
   transition:background 1.5s; animation:breathe var(--pulse) ease-in-out infinite; }
 .stage::before { content:''; position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.10),transparent 55%); animation:drift calc(var(--pulse)*3) linear infinite; }
+.stage, .stage * { color:#eee9df !important; }  /* Gradio's own theme colours every child dark, which is unreadable on the tinted stage */
+.stage .me { color:#fff !important; }
 .stage h2 { margin:0 0 4px; font-weight:400; letter-spacing:.08em; }
 .stage .tag { font:.75rem sans-serif; text-transform:uppercase; letter-spacing:.2em; opacity:.6; margin-bottom:18px; }
 .stage p { margin:0 0 1em; position:relative; }
