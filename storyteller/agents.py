@@ -53,5 +53,5 @@ def direct(session: StorySession, scene_text: str) -> dict:
                    temperature=0.6, as_json=True)
     return {
         "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
-        "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:2],
+        "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:3],
     }
