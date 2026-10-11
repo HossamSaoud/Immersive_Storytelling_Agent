@@ -85,3 +85,12 @@ Any OpenAI-compatible provider: Anthropic Claude (`claude-sonnet-5-5`, `claude-h
 - The critic adds latency (several LLM calls before a scene appears) and can only judge what the model can; it may still pass subtle inconsistencies.
 - The music and ambience are synthesised, so they sound artificial, not like recordings. Lifeline's real-time waiting between messages is not implemented.
 - Next: recorded audio, persistent characters/inventory state, user-selectable genre/length, critic checks across the whole story (not just per scene).
+
+## Demonstration
+
+Two screen recordings of the running prototype are in `demo/` (1080p, about 7 minutes each, recorded in real time, so the pauses are the models working):
+
+| File | Story request | What it shows |
+|---|---|---|
+| `demo/demo_1_astronaut_on_an_alien_moon.mp4` | "An astronaut stranded on an alien moon" | A character messaging through a decaying relay beacon, with replies steering the story. The page changes colour with the mood (mystery, tense, danger). |
+| `demo/demo_2_duke_second_son.mp4` | "reincarnated in a new world as a magical genius and son of the duke" | A different genre with its own message channel and mood colours. |

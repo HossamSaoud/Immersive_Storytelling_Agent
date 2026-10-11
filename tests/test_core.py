@@ -107,6 +107,7 @@ def test_first_turn_plans_story_and_commits_scene(monkeypatch, story):
 def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):
     import app
     story.choices = ["go"]
+    monkeypatch.setattr(config, "API_KEY", "test-key")  # without a key the app (rightly) says "No API key found" instead
     monkeypatch.setattr(agents, "is_allowed", lambda t: True)
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: (_ for _ in ()).throw(RuntimeError("down")))
     *_, last = app.take_turn(story, "go")
