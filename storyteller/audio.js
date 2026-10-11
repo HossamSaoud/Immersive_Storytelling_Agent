@@ -28,23 +28,23 @@
 
   // each recipe builds its sound into `out` and returns [things to stop, timers to clear]
   const RECIPES = {
-    wind: (out) => { const n = noise(), f = filtered("bandpass", 500, 0.6, out); n.connect(f); return [[n, lfo(0.07, 300, f.frequency)], []]; },
-    rain: (out) => { const n = noise(); n.connect(filtered("highpass", 1800, 0.5, gain(0.5, out))); return [[n], []]; },
-    sea: (out) => { const n = noise(), g = gain(0.5, out); n.connect(filtered("lowpass", 600, 0.5, g)); return [[n, lfo(0.11, 0.35, g.gain)], []]; },
+    wind: (out) => { const n = noise(), f = filtered("bandpass", 250, 0.5, gain(0.3, out)); n.connect(f); return [[n, lfo(0.06, 100, f.frequency)], []]; },
+    rain: (out) => { const n = noise(); n.connect(filtered("bandpass", 700, 0.4, gain(0.22, out))); return [[n], []]; },
+    sea: (out) => { const n = noise(), g = gain(0.14, out); n.connect(filtered("lowpass", 280, 0.4, g)); return [[n, lfo(0.08, 0.05, g.gain)], []]; },
     fire: (out) => {
-      const n = noise(), g = gain(0.25, out); n.connect(filtered("lowpass", 700, 0.5, g));
-      const t = setInterval(() => blip(800 + Math.random() * 2500, out, 0.06, 0.05), 160); return [[n], [t]];
+      const n = noise(), g = gain(0.14, out); n.connect(filtered("lowpass", 450, 0.5, g));
+      const t = setInterval(() => blip(300 + Math.random() * 600, out, 0.03, 0.06), 200); return [[n], [t]];
     },
     forest: (out) => {
-      const n = noise(), f = filtered("bandpass", 350, 0.7, gain(0.35, out)); n.connect(f);
-      const t = setInterval(() => { if (Math.random() < 0.4) blip(2500 + Math.random() * 1500, out, 0.04, 0.12); }, 700); return [[n, lfo(0.05, 150, f.frequency)], [t]];
+      const n = noise(), f = filtered("bandpass", 250, 0.6, gain(0.2, out)); n.connect(f);
+      const t = setInterval(() => { if (Math.random() < 0.3) blip(1100 + Math.random() * 500, out, 0.02, 0.2); }, 1100); return [[n, lfo(0.05, 150, f.frequency)], [t]];
     },
     cave: (out) => {
-      const o = tone("sine", 55, out, 0.5), t = setInterval(() => { if (Math.random() < 0.5) blip(900 + Math.random() * 500, out, 0.08, 0.35); }, 1400); return [[o], [t]];
+      const o = tone("sine", 55, out, 0.3), t = setInterval(() => { if (Math.random() < 0.5) blip(500 + Math.random() * 300, out, 0.04, 0.4); }, 1800); return [[o], [t]];
     },
-    machinery: (out) => { const a = tone("sawtooth", 50, filtered("lowpass", 220, 1, out), 0.5), b = tone("square", 100, filtered("lowpass", 300, 1, out), 0.1); return [[a, b], []]; },
-    space: (out) => { const f = filtered("lowpass", 400, 1, out); const a = tone("sine", 55, f, 0.6), b = tone("sine", 55.7, f, 0.6); return [[a, b, lfo(0.05, 150, f.frequency)], []]; },
-    crowd: (out) => { const n = noise(); n.connect(filtered("bandpass", 700, 0.8, gain(0.25, out))); return [[n], []]; },
+    machinery: (out) => { const a = tone("sawtooth", 50, filtered("lowpass", 160, 1, out), 0.3), b = tone("square", 100, filtered("lowpass", 200, 1, out), 0.05); return [[a, b], []]; },
+    space: (out) => { const f = filtered("lowpass", 400, 1, out); const a = tone("sine", 55, f, 0.4), b = tone("sine", 55.7, f, 0.4); return [[a, b, lfo(0.05, 150, f.frequency)], []]; },
+    crowd: (out) => { const n = noise(); n.connect(filtered("bandpass", 450, 0.8, gain(0.15, out))); return [[n], []]; },
   };
 
   const play = (build) => {  // returns a handle whose stop() fades the sound out and cleans up
@@ -72,12 +72,12 @@
 
   const startMusic = (mood) => {
     if (mood === "tense") return startTense();
-    const [scale, root, every, wave, vol] = MUSIC[mood] || MUSIC.mystery;
+    const [scale, root0, every, wave, vol] = MUSIC[mood] || MUSIC.mystery, root = Math.min(root0, 196);  // keep it low and soft
     return play((out) => {
       const pad = filtered("lowpass", 700, 0.7, out);
       const voices = [0, scale[2], scale[4 % scale.length]].map((s) => tone("sine", (root / 2) * 2 ** (s / 12), pad, vol * 0.8));
       const t = setInterval(() => {
-        const note = scale[Math.floor(Math.random() * scale.length)], octave = Math.random() < 0.3 ? 2 : 1;
+        const note = scale[Math.floor(Math.random() * scale.length)], octave = Math.random() < 0.1 ? 2 : 1;
         blip(root * octave * 2 ** (note / 12), out, vol, every / 1000 * 1.6);
       }, every);
       return [voices, [t]];
@@ -87,7 +87,7 @@
   window.echoes = (on) => {
     const stage = document.querySelector(".stage");
     if (!on || !stage) { ambience?.stop(); music?.stop(); ambience = music = null; now = {}; return; }
-    ctx = ctx || new AudioContext(); bus = bus || gain(0.5, ctx.destination);
+    ctx = ctx || new AudioContext(); bus = bus || gain(0.4, ctx.destination);
     ctx.resume();
     const { mood, sound } = stage.dataset;
     if (mood !== now.mood) { music?.stop(); music = startMusic(mood); }
