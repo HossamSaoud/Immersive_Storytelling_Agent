@@ -118,3 +118,9 @@ def test_paint_returns_svg_data_uri_or_nothing(monkeypatch, story):
     assert agents.paint(story, "x").startswith("data:image/svg+xml;base64,")
     monkeypatch.setattr(llm, "chat", lambda *a, **k: "sorry, no")
     assert agents.paint(story, "x") == ""
+
+
+def test_render_shows_what_the_agents_did(story):
+    story.trace += ["critic (m): 5 tokens in, 2 out", "<b>x</b>"]
+    html = render(story)
+    assert "Behind the scenes" in html and "critic (m): 5 tokens in" in html and "<b>x</b>" not in html

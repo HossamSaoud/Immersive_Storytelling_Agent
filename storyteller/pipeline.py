@@ -26,6 +26,8 @@ def write_scene(session, choice: str):
             print(f"[critic] review failed: {e}")
             best, verdict = draft, None
             break
+        session.trace.append(f"critic verdict on draft {n}: {verdict['score']}/10, " + ("consistent" if verdict["coherent"] else "has a contradiction")
+                             + "; notes: " + " | ".join(verdict["issues"][:3]))
         rank = verdict["score"] - (0 if verdict["coherent"] else INCOHERENCE_PENALTY)
         if rank > best_rank:
             best, best_rank = draft, rank

@@ -28,20 +28,21 @@ def is_allowed(text: str) -> bool:
 
 
 def plan(topic: str) -> StorySession:
-    bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True)
-    return StorySession(topic=topic, bible=bible)
+    trace = []
+    bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True, trace=trace)
+    return StorySession(topic=topic, bible=bible, trace=trace)
 
 
 def narrate(session: StorySession, choice: str, draft: str = "", notes: str = "") -> str:
     """Write the next scene. Pass the rejected `draft` and the critic's `notes` to rewrite instead."""
     return llm.chat("narrator", prompts.narrator_system(session.is_last),
-                    prompts.narrator_user(session, choice, draft, notes), temperature=0.95)
+                    prompts.narrator_user(session, choice, draft, notes), temperature=0.95, trace=session.trace)
 
 
 def critique(session: StorySession, scene_text: str, choice: str) -> dict:
     """Returns {score: 1-10, coherent, issues, fix}. Raises if the critic call itself fails."""
     out = llm.chat("critic", prompts.critic_system(session.is_last),
-                   prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True)
+                   prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True, trace=session.trace)
     return {
         "score": int(out.get("score", 0)),
         "coherent": out.get("coherent") is True,  # bool("false") is True, so accept only a real JSON true
@@ -52,7 +53,7 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
 
 def paint(session: StorySession, scene_text: str) -> str:
     """A small SVG illustration as a data: URI, or "" if the model returned none. It is shown in an <img>, so it cannot run script."""
-    out = llm.chat("painter", prompts.painter_system(), prompts.painter_user(session, scene_text), temperature=0.7, max_tokens=4000)
+    out = llm.chat("painter", prompts.painter_system(), prompts.painter_user(session, scene_text), temperature=0.7, max_tokens=7000, trace=session.trace)
     svg = re.search(r"<svg.*</svg>", out, re.DOTALL)
     return "data:image/svg+xml;base64," + base64.b64encode(svg.group(0).encode()).decode() if svg else ""
 
@@ -60,7 +61,7 @@ def paint(session: StorySession, scene_text: str) -> str:
 def direct(session: StorySession, scene_text: str) -> dict:
     """Returns {mood, choices}. The final scene gets no choices - the story is over."""
     out = llm.chat("director", prompts.director_system(), prompts.director_user(session, scene_text),
-                   temperature=0.6, as_json=True)
+                   temperature=0.6, as_json=True, trace=session.trace)
     return {
         "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
         "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:2],

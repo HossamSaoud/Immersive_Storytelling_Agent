@@ -39,11 +39,13 @@ def explain(e: Exception) -> str:
 def take_turn(session, text):
     """Begin (session None, text = the story request) or continue (text = a chosen or typed action)."""
     text, before = (text or "").strip(), session
+    if session:
+        session.trace.clear()
     if not text:
         yield out(session)
         return
     try:
-        if not agents.is_allowed(text):
+        if session is None and not agents.is_allowed(text):  # later turns are our own buttons, so only the request is screened
             yield out(session, agents.REFUSAL)
             return
         if session is None:
@@ -74,6 +76,17 @@ def start(topic):
 
 with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
     gr.Markdown("# Echoes\nA stranger messages you for help. Your replies decide what happens to them.")
+    with gr.Accordion("How this works", open=False):
+        gr.Markdown(
+            "Each message goes through these AI helpers. The model each one uses is shown in brackets.\n\n"
+            f"1. **Safety check** ({config.MODELS['safety']}) screens what you type.\n"
+            f"2. **Planner** ({config.MODELS['planner']}) invents the world, the character and the plot once, at the start.\n"
+            f"3. **Narrator** ({config.MODELS['narrator']}) writes the character's chat messages.\n"
+            f"4. **Critic** ({config.MODELS['critic']}) scores each draft. A weak draft is rewritten (up to {config.MAX_REVISIONS} time(s)) "
+            "and you never see the rejected one.\n"
+            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n"
+            f"6. **Painter** ({config.MODELS['painter']}) draws the pixel picture.\n\n"
+            "Open **Behind the scenes** under the story to see what each helper did on the latest turn, with token counts.")
     session = gr.State(None)
     with gr.Row():
         topic = gr.Textbox(label="Your story request", placeholder=EXAMPLES[0], scale=4)

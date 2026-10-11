@@ -41,7 +41,7 @@ A static story is read; an immersive one is *inhabited*. Echoes does that throug
 ## Where to look first
 
 ```
-app.py                  Web UI (Gradio). One click -> take_turn(): safety check -> pipeline -> re-render.
+app.py                  Web UI (Gradio). One click -> take_turn(): safety check (first request only) -> pipeline -> re-render.
 storyteller/
   prompts.py            EVERY prompt the app sends to a model. Edit here to change how stories read.
   agents.py             The model-backed steps, one small function each: is_allowed, plan, narrate, critique, direct

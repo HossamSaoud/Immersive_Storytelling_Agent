@@ -103,8 +103,9 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
 def painter_system() -> str:
     return (
         "You are a retro pixel artist (16-bit game look) illustrating a story. Reply with ONE self-contained SVG and nothing else: "
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 36' shape-rendering='crispEdges'>. Draw ONLY <rect> elements "
-        "with whole-number x, y, width, height on that 96x36 grid, a palette of at most 14 colors that fits the mood, at most 120 rects. "
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 60' shape-rendering='crispEdges'>. Draw fine, small pixels on that 160x60 grid using only whole numbers: "
+        "ONE <path fill='#rrggbb' d='M x y h w v h h-w z ...'/> per color (many 'M x y h w v h h-w z' rectangles inside one path), "
+        "a palette of 16-20 colors that fits the mood with shaded tones for depth, at most 250 rectangles in total. "
         "Before the shapes write one XML comment <!-- --> naming what the picture shows: the place, the main character as a small "
         "readable figure, and the one key object or event of the scene. Compose it so those things are clearly recognisable: "
         "background bands (sky, ground, walls), then the setting's landmarks, then the character and the key object in front, "

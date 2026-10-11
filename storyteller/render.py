@@ -27,6 +27,8 @@ CSS = "\n".join(
   font:1rem/1.45 system-ui,sans-serif; }
 .stage .me { margin-left:auto; border-radius:18px 18px 4px 18px; background:#2f7df6; color:#fff; }
 .stage .art { image-rendering:pixelated; width:100%; border-radius:10px; margin:0 0 14px; position:relative; }
+.stage .trace { opacity:.8; font:.8rem/1.5 system-ui,sans-serif; margin:18px 0 0; }
+.stage .trace li { margin:2px 0; }
 .stage details { opacity:.7; margin-bottom:18px; position:relative; }
 .stage .prologue { opacity:.95; padding:14px 18px; margin-bottom:22px; border-left:3px solid rgba(255,255,255,.35);
   background:rgba(0,0,0,.18); border-radius:0 10px 10px 0; position:relative; }
@@ -60,5 +62,7 @@ def render(session: StorySession | None, writing: bool = False) -> str:
     prologue = (f'<details class="prologue"{" open" if len(scenes) <= 1 else ""}>'
                 f"<summary>Prologue &mdash; the world</summary>{_paras(session.prologue)}</details>") if session.prologue else ""
     summary = f"<details><summary>Earlier messages</summary><div class=\"chat\">{past}</div></details>" if past else ""
+    trace = ("<details class=\"trace\"><summary>Behind the scenes: what the agents did this turn</summary><ul>"
+             + "".join(f"<li>{html.escape(t)}</li>" for t in session.trace) + "</ul></details>") if session.trace else ""
     return (f'<div class="stage mood-{session.mood}"><h2>{html.escape(session.title)}</h2>'
-            f'<div class="tag">{session.mood}{who}</div>{prologue}{summary}<div class="chat">{current}</div></div>')
+            f'<div class="tag">{session.mood}{who}</div>{prologue}{summary}<div class="chat">{current}</div>{trace}</div>')

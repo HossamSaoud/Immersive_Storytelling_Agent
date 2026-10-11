@@ -12,7 +12,7 @@ A story request goes through five single-purpose steps, each one small function 
 | Narrator | bible + history + player action | one scene of prose | The creative step; runs at high temperature. |
 | Critic | the draft + the same context | JSON `{score, coherent, issues, fix}` | A model reviewing a finished draft catches contradictions it would not avoid while writing. Runs at low temperature. |
 | Director | the approved scene | JSON `{mood, choices}` | Cheap structured output the UI needs; keeps the narrator focused on prose. |
-| Safety judge (`is_allowed`) | request / typed action | JSON `{allowed}` | See decision 7. |
+| Safety judge (`is_allowed`) | story request | JSON `{allowed}` | See decision 7. |
 
 *Cost:* 3+ model calls per scene (narrator, critic, director, plus rewrites) instead of 1.
 *Where:* `agents.py` (the steps), `pipeline.py` (how narrator and critic are chained).
@@ -72,12 +72,12 @@ models) were left out.
 
 ## 7. Safety in layers
 
-1. **Safety judge** on the initial request and every typed action. Uses OpenAI's moderation endpoint when the
+1. **Safety judge** on the story request the player types. Uses OpenAI's moderation endpoint when the
    provider is OpenAI (free, purpose-built), otherwise an LLM yes/no judge (`SAFETY_SYSTEM`).
-2. **Content rules** inside the planner and narrator prompts, so unsafe text is also discouraged at generation time.
-No single layer is trusted alone. Every action is screened, including the suggested buttons (they are model output
-too), at the price of one extra model call per click. If a model call fails or an action is refused, the player's
-last choices are shown again so they can retry.
+2. **Content rules** inside the planner, narrator and director prompts, so unsafe text is also discouraged at generation time.
+Later turns are the app's own two buttons (there is no free-text box), so they are not screened again. An earlier
+version screened them and the judge sometimes refused harmless buttons. If a model call fails or the request is
+refused, the player's last choices are shown again so they can retry.
 
 ## 8. JSON from models is parsed defensively
 
