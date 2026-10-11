@@ -26,9 +26,6 @@ CSS = "\n".join(
 .stage .msg { max-width:78%; margin:0 0 8px; padding:9px 14px; border-radius:18px 18px 18px 4px; background:rgba(255,255,255,.14);
   font:1rem/1.45 system-ui,sans-serif; }
 .stage .me { margin-left:auto; border-radius:18px 18px 4px 18px; background:#2f7df6; color:#fff; }
-.stage .art { image-rendering:pixelated; width:100%; border-radius:10px; margin:0 0 14px; position:relative; }
-.stage .trace { opacity:.8; font:.8rem/1.5 system-ui,sans-serif; margin:18px 0 0; }
-.stage .trace li { margin:2px 0; }
 .stage details { opacity:.7; margin-bottom:18px; position:relative; }
 .stage .prologue { opacity:.95; padding:14px 18px; margin-bottom:22px; border-left:3px solid rgba(255,255,255,.35);
   background:rgba(0,0,0,.18); border-radius:0 10px 10px 0; position:relative; }
@@ -44,10 +41,9 @@ def _paras(text: str) -> str:
     return "".join(f"<p>{html.escape(p)}</p>" for p in text.split("\n\n") if p.strip())
 
 
-def _scene(scene, art: bool = False) -> str:
+def _scene(scene) -> str:
     reply = f'<div class="msg me">{html.escape(scene.choice)}</div>' if scene.choice else ""
-    pic = f'<img class="art" alt="" src="{scene.image}">' if art and scene.image else ""
-    return reply + pic + "".join(f'<div class="msg">{html.escape(m)}</div>' for m in scene.text.split("\n\n") if m.strip())
+    return reply + "".join(f'<div class="msg">{html.escape(m)}</div>' for m in scene.text.split("\n\n") if m.strip())
 
 
 def render(session: StorySession | None, writing: bool = False) -> str:
@@ -56,7 +52,7 @@ def render(session: StorySession | None, writing: bool = False) -> str:
         return '<div class="stage mood-mystery"><h2>Echoes</h2><p>Name a world, and step inside.</p></div>'
     scenes = session.scenes
     past = "".join(_scene(s) for s in (scenes if writing else scenes[:-1]))
-    current = '<div class="msg"><span class="cursor"></span></div>' if writing else (f'<div class="current">{_scene(scenes[-1], art=True)}</div>' if scenes else "")
+    current = '<div class="msg"><span class="cursor"></span></div>' if writing else (f'<div class="current">{_scene(scenes[-1])}</div>' if scenes else "")
     name = session.bible.get("protagonist_name")
     who = f" &middot; chatting with {html.escape(str(name))}" if name else ""
     prologue = (f'<details class="prologue"{" open" if len(scenes) <= 1 else ""}>'

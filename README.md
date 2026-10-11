@@ -21,7 +21,7 @@ python -m pytest                  # optional: run tests
 |---|---|
 | OpenAI | `LLM_PROVIDER=openai` and `OPENAI_API_KEY=...` |
 | Free hosted (Groq) | `LLM_PROVIDER=groq` and `GROQ_API_KEY=...` |
-| Claude (Sonnet writes and judges, Haiku directs, paints and screens) | `LLM_PROVIDER=anthropic`, `CLAUDE_API_KEY=...` (plus `ANTHROPIC_WORKSPACE_ID=...` if the key is not workspace-scoped) |
+| Claude (Sonnet writes and judges, Haiku directs and screens) | `LLM_PROVIDER=anthropic`, `CLAUDE_API_KEY=...` (plus `ANTHROPIC_WORKSPACE_ID=...` if the key is not workspace-scoped) |
 | Hugging Face router | `LLM_PROVIDER=huggingface` and `HF_API_KEY=...` |
 | Local (Ollama) | `LLM_PROVIDER=ollama` (after `ollama pull llama3.2`), no key |
 | A specific model | `STORY_MODEL=<model name>` (all agents) |

@@ -8,9 +8,6 @@
 
 They share state only through StorySession (story.py). How narrate and critique are chained is in pipeline.py.
 """
-import base64
-import re
-
 from . import config, llm, prompts
 from .story import MOODS, StorySession
 
@@ -49,13 +46,6 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
         "issues": [str(i) for i in out.get("issues", [])],
         "fix": str(out.get("fix", "")),
     }
-
-
-def paint(session: StorySession, scene_text: str) -> str:
-    """A small SVG illustration as a data: URI, or "" if the model returned none. It is shown in an <img>, so it cannot run script."""
-    out = llm.chat("painter", prompts.painter_system(), prompts.painter_user(session, scene_text), temperature=0.7, max_tokens=7000, trace=session.trace)
-    svg = re.search(r"<svg.*</svg>", out, re.DOTALL)
-    return "data:image/svg+xml;base64," + base64.b64encode(svg.group(0).encode()).decode() if svg else ""
 
 
 def direct(session: StorySession, scene_text: str) -> dict:

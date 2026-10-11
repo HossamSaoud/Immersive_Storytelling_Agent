@@ -15,11 +15,6 @@ EXAMPLES = [
 ]
 
 
-# The narrator's voice is the browser's own speech engine: free, no tokens, no key.
-SPEAK = """(on) => { speechSynthesis.cancel(); const el = document.querySelector('.stage .current');
-  if (on && el) speechSynthesis.speak(new SpeechSynthesisUtterance(el.innerText)); }"""
-
-
 def out(session, status="", writing=False):
     """One UI update: (state, stage, status, 2 reply buttons). The buttons come from session.choices."""
     choices = [] if writing or session is None else session.choices
@@ -56,13 +51,7 @@ def take_turn(session, text):
                 yield out(session, item, writing=True)
             else:
                 scene, direction, review = item
-        yield out(session, "Painting the scene...", writing=True)
-        try:
-            image = agents.paint(session, scene)
-        except Exception as e:  # art is optional: the story goes on without it
-            print(f"[painter] failed: {e!r}")
-            image = ""
-        session.add_scene(scene, direction, text, image)  # the mood change re-tints the stage here
+        session.add_scene(scene, direction, text)  # the mood change re-tints the stage here
         end = "" if direction["choices"] else "  \nThe end. Start a new story above."
         yield out(session, f"*{review}*{end}")
     except Exception as e:  # nothing was committed, so the player can simply retry
@@ -84,8 +73,7 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
             f"3. **Narrator** ({config.MODELS['narrator']}) writes the character's chat messages.\n"
             f"4. **Critic** ({config.MODELS['critic']}) scores each draft. A weak draft is rewritten (up to {config.MAX_REVISIONS} time(s)) "
             "and you never see the rejected one.\n"
-            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n"
-            f"6. **Painter** ({config.MODELS['painter']}) draws the pixel picture.\n\n"
+            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n\n"
             "Open **Behind the scenes** under the story to see what each helper did on the latest turn, with token counts.")
     session = gr.State(None)
     with gr.Row():
@@ -94,15 +82,14 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
     gr.Examples(EXAMPLES, topic)
     stage = gr.HTML(render(None))
     status = gr.Markdown()
-    narrate = gr.Checkbox(True, label="Narrator reads each message aloud")
     with gr.Row():
         b = [gr.Button(visible=False) for _ in range(2)]
 
     outputs = [session, stage, status, *b]
-    begin.click(start, [topic], outputs).then(None, narrate, None, js=SPEAK)
-    topic.submit(start, [topic], outputs).then(None, narrate, None, js=SPEAK)
+    begin.click(start, [topic], outputs)
+    topic.submit(start, [topic], outputs)
     for btn in b:
-        btn.click(take_turn, [session, btn], outputs).then(None, narrate, None, js=SPEAK)
+        btn.click(take_turn, [session, btn], outputs)
 
 if __name__ == "__main__":
     demo.queue().launch(inbrowser=True)

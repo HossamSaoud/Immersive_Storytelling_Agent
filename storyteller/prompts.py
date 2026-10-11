@@ -100,25 +100,6 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
     return f"{_context(s)}\nPLAYER'S ACTION: {choice or '(story opening)'}\n\nSCENE TO REVIEW:\n{scene_text}"
 
 
-def painter_system() -> str:
-    return (
-        "You are a retro pixel artist (16-bit game look) illustrating a story. Reply with ONE self-contained SVG and nothing else: "
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 60' shape-rendering='crispEdges'>. Draw fine, small pixels on that 160x60 grid using only whole numbers: "
-        "ONE <path fill='#rrggbb' d='M x y h w v h h-w z ...'/> per color (many 'M x y h w v h h-w z' rectangles inside one path), "
-        "a palette of 16-20 colors that fits the mood with shaded tones for depth, at most 250 rectangles in total. "
-        "Before the shapes write one XML comment <!-- --> naming what the picture shows: the place, the main character as a small "
-        "readable figure, and the one key object or event of the scene. Compose it so those things are clearly recognisable: "
-        "background bands (sky, ground, walls), then the setting's landmarks, then the character and the key object in front, "
-        "with a light source. No text, no scripts, no external links."
-    )
-
-
-def painter_user(s: StorySession, scene_text: str) -> str:
-    b = s.bible
-    return (f"Story: {s.title} ({b.get('tone', '')}). Mood: {s.mood}.\nWorld: {b.get('world', '')}\nCharacter: {b.get('protagonist_name', '')}, "
-            f"{b.get('protagonist', '')}\nCurrent place: {b.get('setting', '')}\n\nDraw what is happening in the latest messages:\n{scene_text}")
-
-
 def director_system() -> str:
     return (
         "You are the stage director of an interactive story. Given the scene, reply with JSON: "

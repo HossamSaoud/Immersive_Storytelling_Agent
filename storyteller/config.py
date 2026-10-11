@@ -37,7 +37,7 @@ WORKSPACE_ID = os.getenv("ANTHROPIC_WORKSPACE_ID")  # only needed for Anthropic 
 
 STORY_MODEL = os.getenv("STORY_MODEL")
 MODELS = {role: os.getenv(f"{role.upper()}_MODEL") or STORY_MODEL or ROLE_MODELS.get(LLM_PROVIDER, {}).get(role) or _default_model
-          for role in ("planner", "narrator", "critic", "director", "safety", "painter")}
+          for role in ("planner", "narrator", "critic", "director", "safety")}
 
 MAX_SCENES = int(os.getenv("MAX_SCENES", "5"))
 MAX_REVISIONS = int(os.getenv("MAX_REVISIONS", "2"))  # rewrites the critic may demand per scene
