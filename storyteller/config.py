@@ -23,7 +23,7 @@ PROVIDERS = {  # name: (base URL or None for OpenAI, env var holding the key, de
 # Cheapest model that is good enough per job (used when no *_MODEL / STORY_MODEL is set).
 # Sonnet writes and judges (a Haiku critic nitpicked every draft into a rewrite, which costs more); Haiku does the short jobs.
 ROLE_MODELS = {"anthropic": {"director": "claude-haiku-5-5",
-                            "safety": "claude-haiku-5-5", "painter": "claude-haiku-5-5"}}
+                            "safety": "claude-haiku-5-5"}}
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
 if LLM_PROVIDER not in PROVIDERS:

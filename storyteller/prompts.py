@@ -102,16 +102,20 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
 
 def painter_system() -> str:
     return (
-        "You are a retro pixel artist (16-bit game look). Reply with ONE self-contained SVG and nothing else: "
-        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30' shape-rendering='crispEdges'>. Draw ONLY <rect> elements "
-        "with whole-number x, y, width, height on that 80x30 pixel grid, using a palette of at most 12 colors that fits the mood. "
-        "Layer big background bands first (sky, ground), then simple silhouettes and a light source, with a few dither or star "
-        "pixels. No text, no scripts, no external links, at most 60 rects."
+        "You are a retro pixel artist (16-bit game look) illustrating a story. Reply with ONE self-contained SVG and nothing else: "
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 36' shape-rendering='crispEdges'>. Draw ONLY <rect> elements "
+        "with whole-number x, y, width, height on that 96x36 grid, a palette of at most 14 colors that fits the mood, at most 120 rects. "
+        "Before the shapes write one XML comment <!-- --> naming what the picture shows: the place, the main character as a small "
+        "readable figure, and the one key object or event of the scene. Compose it so those things are clearly recognisable: "
+        "background bands (sky, ground, walls), then the setting's landmarks, then the character and the key object in front, "
+        "with a light source. No text, no scripts, no external links."
     )
 
 
 def painter_user(s: StorySession, scene_text: str) -> str:
-    return f"Story: {s.title} ({s.bible.get('tone', '')}). Mood: {s.mood}.\nIllustrate this scene:\n{scene_text}"
+    b = s.bible
+    return (f"Story: {s.title} ({b.get('tone', '')}). Mood: {s.mood}.\nWorld: {b.get('world', '')}\nCharacter: {b.get('protagonist_name', '')}, "
+            f"{b.get('protagonist', '')}\nCurrent place: {b.get('setting', '')}\n\nDraw what is happening in the latest messages:\n{scene_text}")
 
 
 def director_system() -> str:
