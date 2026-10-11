@@ -49,7 +49,7 @@ def test_render_escapes_html_and_shows_mood_name_and_prologue():
     s = StorySession("t", {"title": "T", "protagonist_name": "Mara <b>", "prologue": "You are in <i>Brinehaven</i>."})
     s.add_scene("<script>alert(1)</script>", {"mood": "danger", "choices": []}, "")
     html = render(s)
-    assert "mood-danger" in html and "you are Mara &lt;b&gt;" in html and "Prologue" in html
+    assert "mood-danger" in html and "chatting with Mara &lt;b&gt;" in html and "Prologue" in html
     assert "<script>" not in html and "<i>" not in html
 
 
@@ -96,12 +96,12 @@ def test_provider_and_per_agent_model_switching(monkeypatch):
 
 def test_first_turn_plans_story_and_commits_scene(monkeypatch, story):
     import app
-    scene = ("Scene one.", {"mood": "tense", "choices": ["a", "b", "c"]}, "ok")
+    scene = ("Scene one.", {"mood": "tense", "choices": ["a", "b"]}, "ok")
     monkeypatch.setattr(agents, "is_allowed", lambda t: True)
     monkeypatch.setattr(agents, "plan", lambda t: story)
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: iter(["working", scene]))
     *_, last = app.take_turn(None, "a fox")
-    assert last[0] is story and story.mood == "tense" and story.choices == ["a", "b", "c"] and last[3]["visible"]
+    assert last[0] is story and story.mood == "tense" and story.choices == ["a", "b"] and last[3]["visible"]
 
 
 def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):
@@ -111,3 +111,10 @@ def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: (_ for _ in ()).throw(RuntimeError("down")))
     *_, last = app.take_turn(story, "go")
     assert last[0] is story and not story.scenes and last[3]["visible"] and "problem" in last[2]
+
+
+def test_paint_returns_svg_data_uri_or_nothing(monkeypatch, story):
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: "Here:\n<svg viewBox='0 0 1 1'></svg>")
+    assert agents.paint(story, "x").startswith("data:image/svg+xml;base64,")
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: "sorry, no")
+    assert agents.paint(story, "x") == ""

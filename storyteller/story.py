@@ -11,6 +11,7 @@ class Scene:
     text: str
     mood: str
     choice: str  # what the player did to get here ("" for the opening scene)
+    image: str = ""  # data: URI of the scene's illustration ("" if none)
 
 
 @dataclass
@@ -40,6 +41,6 @@ class StorySession:
     def mood(self) -> str:
         return self.scenes[-1].mood if self.scenes else "mystery"
 
-    def add_scene(self, text: str, direction: dict, choice: str) -> None:
-        self.scenes.append(Scene(text, direction["mood"], choice))
+    def add_scene(self, text: str, direction: dict, choice: str, image: str = "") -> None:
+        self.scenes.append(Scene(text, direction["mood"], choice, image))
         self.choices = direction["choices"]

@@ -11,7 +11,8 @@ from . import config
 
 @lru_cache(maxsize=1)
 def client() -> OpenAI:
-    return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.API_KEY)
+    headers = {"anthropic-workspace-id": config.WORKSPACE_ID} if config.WORKSPACE_ID else None
+    return OpenAI(base_url=config.LLM_BASE_URL, api_key=config.API_KEY, default_headers=headers)
 
 
 def extract_json(text: str) -> dict:
@@ -25,12 +26,13 @@ def extract_json(text: str) -> dict:
         return json.loads(match.group(0))
 
 
-def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False):
+def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False, max_tokens: int = 2048):
     """Ask `role`'s model. Returns the text, or a dict when as_json=True."""
     resp = client().chat.completions.create(
         model=config.MODELS[role],
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         temperature=temperature,
+        max_tokens=max_tokens,
         **({"response_format": {"type": "json_object"}} if as_json else {}),
     )
     text = (resp.choices[0].message.content or "").strip()
