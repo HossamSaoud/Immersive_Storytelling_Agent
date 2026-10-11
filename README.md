@@ -1,8 +1,8 @@
 # Echoes - an Immersive Storytelling Agent
 
 Type a topic and a character in trouble starts messaging you, a bit like the phone game *Lifeline*. You are the only one who can
-reach them, and you steer the story by choosing one of two replies. Each story invents its own odd way for the messages to arrive (a diary
-that writes back, frost on a window, notes in a card catalogue...). The stage **re-tints to match each scene's mood**, and the
+reach them, and you steer the story by choosing one of two replies. Each story invents a way for the messages to arrive that fits its world (a drifting relay beacon for an
+astronaut, a dead pager for a nurse, a telegraph for a 1890s keeper, a candle flame only in a magical world). The stage **re-tints to match each scene's mood**, and the
 browser plays matching **ambient sound and music**. Every scene is reviewed by a **critic agent** before you see it, so the story stays coherent.
 
 ## Setup & run

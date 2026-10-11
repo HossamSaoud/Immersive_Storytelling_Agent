@@ -123,8 +123,9 @@ error text is never shown on the page.
 
 Modelled on the phone game *Lifeline*: a character messages the reader, who steers with two replies. The narrator writes the character in
 first person as 5-8 short messages (`narrator_system`); `render.py` shows them as chat bubbles and your reply as a bubble on the right.
-The planner also invents a `channel` (diary, frost on a window, notes in a card catalogue...) and gets three random ideas per request
-(`prompts.CHANNELS`) so stories do not all start as a radio call. The narrator keeps that medium's voice; the critic checks it.
+The planner also invents a `channel` (the medium, the concrete reason only the reader receives it, and how it looks). It must be physically
+plausible for the world: an astronaut gets a drifting relay or a ship's log, not a bottle or a mirror; supernatural media are only for magical worlds.
+The planner is shown ideas grouped by kind of world (`prompts.CHANNELS`) so it does not default to a radio. The narrator keeps that medium's voice; the critic checks it.
 *Cost:* the medium changes the wording only, not the look of the page. Lifeline's real-time waiting is not implemented.
 
 ## 14. Claude is used through its OpenAI-compatible endpoint

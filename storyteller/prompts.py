@@ -7,16 +7,16 @@
   director_*               agents.direct       -> JSON mood + ambience + 2 reply choices
 """
 import json
-import random
 
 from . import config
 from .story import MOODS, SOUNDS, StorySession
 
-CHANNELS = [  # inspiration only: the planner is told to pick one or invent a better fit
-    "a diary whose pages write back", "letters left in a hollow tree", "messages in bottles on the tide", "a haunted mirror",
-    "a ship's telegraph", "a seashell you hold to your ear", "notes slipped under your door", "a pigeon post", "a talking painting",
-    "a dream you both share", "a music box that spells words", "a pipe organ's keys", "frost writing on a window", "a lantern that blinks code",
-    "an old typewriter that types by itself", "a candle flame that bends into words", "a library book with new margin notes",
+CHANNELS = [  # (kind of world, ways its characters could really reach a stranger); inspiration only
+    ("space or far future", "a ship's log that syncs to your tablet; a drifting relay beacon that reaches your old radio; a probe's data feed that spells words"),
+    ("modern day", "a messaging app on a phone that should be dead; a voicemail left on your number; a smart speaker; an old walkie-talkie; a webcam chat"),
+    ("past (1800s-1900s)", "a telegraph line; a ship's telegraph; letters by a pigeon or courier; a telephone party line; a wireless set"),
+    ("remote or survival", "a signal lamp that blinks code; a handheld radio on a rare frequency; notes carried by a bird; a satellite beacon"),
+    ("fantasy or magic only", "a diary whose pages write back; a talking mirror; a candle flame that bends into words; a seashell you hold to your ear"),
 ]
 
 CONTENT_RULES = (
@@ -42,15 +42,17 @@ def planner_system() -> str:
         "supporting_cast (2-3 PEOPLE or creatures, never objects: {name, role, relationship_to_you}, each with a distinct name), "
         "central_conflict (the problem, who or what opposes you, and what is lost if you fail), "
         "motifs (3 recurring images/sounds/smells), "
-        "channel ({medium: 2-5 words naming the odd or beautiful way this character's words reach the reader, fitted to the world (NOT a radio or phone "
-        "unless the story truly demands it), why_you: why only the reader receives it, look: how the messages look and sound in that medium}), "
+        "channel ({medium: 2-5 words naming the odd or beautiful way this character's words reach the reader, fitted to the world (it MUST be physically plausible in this world, "
+        "given its technology, era and setting: an astronaut cannot use bottles or a mirror, a 1890s keeper cannot use a phone app; supernatural media "
+        "like a talking mirror are allowed only if the world is magical; vary it, a radio is fine when it fits), why_you: the real, concrete reason this particular message reaches the reader and no one else (a stray signal, a number dialled by mistake, a book the reader holds), look: how the messages look and sound in that medium}), "
         "prologue (100-150 words addressed to the reader as 'you': how and why only you receive this character's messages through that channel, where the character is, what just happened and what is at stake - clear, no riddles), "
         f"arc (exactly {config.MAX_SCENES} one-sentence beats; the last beat resolves the story)}}."
     )
 
 
 def planner_user(topic: str) -> str:
-    return f"Story request: {topic}\nChannel ideas (pick one or invent a better fit): {'; '.join(random.sample(CHANNELS, 3))}"
+    ideas = "\n".join(f"- {kind}: {ways}" for kind, ways in CHANNELS)
+    return f"Story request: {topic}\nChannel ideas by kind of world (use only the kind that fits this story's world, or invent a better fit):\n{ideas}"
 
 
 def _context(s: StorySession) -> str:
