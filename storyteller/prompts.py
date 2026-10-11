@@ -9,7 +9,7 @@
 import json
 
 from . import config
-from .story import MOODS, StorySession
+from .story import MOODS, SOUNDS, StorySession
 
 CONTENT_RULES = (
     "Keep content suitable for a general audience: no graphic violence, sexual content, hate, or real "
@@ -103,7 +103,7 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
 def director_system() -> str:
     return (
         "You are the stage director of an interactive story. Given the scene, reply with JSON: "
-        f"{{mood: one of {MOODS}, "
+        f"{{mood: one of {MOODS}, sound: the background ambience that fits where the character is right now, one of {SOUNDS}, "
         "choices: exactly 2 short, clearly different replies the reader could send the character (max 8 words each, e.g. 'Go toward the light')}."
     )
 

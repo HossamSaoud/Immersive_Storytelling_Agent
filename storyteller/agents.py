@@ -9,7 +9,7 @@
 They share state only through StorySession (story.py). How narrate and critique are chained is in pipeline.py.
 """
 from . import config, llm, prompts
-from .story import MOODS, StorySession
+from .story import MOODS, SOUNDS, StorySession
 
 REFUSAL = "I can't weave a story around that. Try another idea - a mystery, a voyage, a strange city?"
 
@@ -48,10 +48,11 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
 
 
 def direct(session: StorySession, scene_text: str) -> dict:
-    """Returns {mood, choices}. The final scene gets no choices - the story is over."""
+    """Returns {mood, sound, choices}. The final scene gets no choices - the story is over."""
     out = llm.chat("director", prompts.director_system(), prompts.director_user(session, scene_text),
                    temperature=0.6, as_json=True)
     return {
         "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
+        "sound": out.get("sound") if out.get("sound") in SOUNDS else "silence",
         "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:2],
     }

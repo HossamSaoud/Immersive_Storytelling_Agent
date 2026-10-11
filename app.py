@@ -3,10 +3,15 @@
 One click -> take_turn() -> safety check -> (plan the story on the first turn) -> pipeline.write_scene() (narrator <-> critic).
 Each yield re-renders the page, which is how status lines like "The critic is reviewing..." appear live.
 """
+from pathlib import Path
+
 import gradio as gr
 
 from storyteller import agents, config, pipeline
 from storyteller.render import CSS, render
+
+AUDIO_JS = (Path(__file__).parent / "storyteller" / "audio.js").read_text(encoding="utf-8")
+SOUND = "(on) => window.echoes(on)"  # re-reads the stage's mood and ambience after every turn
 
 EXAMPLES = [
     "An astronaut stranded on an alien moon",
@@ -61,18 +66,10 @@ def start(topic):
     yield from take_turn(None, topic)
 
 
-with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
+with gr.Blocks(css=CSS, js=AUDIO_JS, title="Echoes - Immersive Storyteller") as demo:
     gr.Markdown("# Echoes\nA stranger messages you for help. Your replies decide what happens to them.")
-    with gr.Accordion("How this works", open=False):
-        gr.Markdown(
-            "Each message goes through these AI helpers. The model each one uses is shown in brackets.\n\n"
-            f"1. **Safety check** ({config.MODELS['safety']}) screens what you type.\n"
-            f"2. **Planner** ({config.MODELS['planner']}) invents the world, the character and the plot once, at the start.\n"
-            f"3. **Narrator** ({config.MODELS['narrator']}) writes the character's chat messages.\n"
-            f"4. **Critic** ({config.MODELS['critic']}) scores each draft. A weak draft is rewritten (up to {config.MAX_REVISIONS} time(s)) "
-            "and you never see the rejected one.\n"
-            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n")
     session = gr.State(None)
+    sound = gr.Checkbox(True, label="Sound and music (changes with the scene)")
     with gr.Row():
         topic = gr.Textbox(label="Your story request", placeholder=EXAMPLES[0], scale=4)
         begin = gr.Button("Begin", variant="primary", scale=1)
@@ -83,10 +80,11 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
         b = [gr.Button(visible=False) for _ in range(2)]
 
     outputs = [session, stage, status, *b]
-    begin.click(start, [topic], outputs)
-    topic.submit(start, [topic], outputs)
+    begin.click(start, [topic], outputs).then(None, sound, None, js=SOUND)
+    topic.submit(start, [topic], outputs).then(None, sound, None, js=SOUND)
+    sound.change(None, sound, None, js=SOUND)
     for btn in b:
-        btn.click(take_turn, [session, btn], outputs)
+        btn.click(take_turn, [session, btn], outputs).then(None, sound, None, js=SOUND)
 
 if __name__ == "__main__":
     demo.queue().launch(inbrowser=True)

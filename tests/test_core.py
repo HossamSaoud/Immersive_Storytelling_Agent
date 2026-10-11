@@ -111,3 +111,14 @@ def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: (_ for _ in ()).throw(RuntimeError("down")))
     *_, last = app.take_turn(story, "go")
     assert last[0] is story and not story.scenes and last[3]["visible"] and "problem" in last[2]
+
+
+def test_director_sound_must_be_known(monkeypatch, story):
+    monkeypatch.undo()  # the fixture replaced agents.direct; this test needs the real one
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: {"mood": "calm", "sound": "dubstep", "choices": ["a", "b", "c"]})
+    d = agents.direct(story, "x")
+    assert d["sound"] == "silence" and d["choices"] == ["a", "b"]
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: {"sound": "rain"})
+    assert agents.direct(story, "x")["sound"] == "rain"
+    story.add_scene("t", d, "")
+    assert 'data-sound="silence"' in render(story)

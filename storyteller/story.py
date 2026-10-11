@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from . import config
 
+SOUNDS = ["silence", "wind", "rain", "sea", "fire", "forest", "cave", "machinery", "space", "crowd"]  # ambiences audio.js can play
 MOODS = ["calm", "wonder", "mystery", "tense", "danger", "melancholy", "joy", "triumph"]
 
 
@@ -11,6 +12,7 @@ class Scene:
     text: str
     mood: str
     choice: str  # what the player did to get here ("" for the opening scene)
+    sound: str = "silence"  # background ambience for the scene, one of SOUNDS
 
 
 @dataclass
@@ -37,9 +39,13 @@ class StorySession:
         return self.scene_no >= config.MAX_SCENES
 
     @property
+    def sound(self) -> str:
+        return self.scenes[-1].sound if self.scenes else "silence"
+
+    @property
     def mood(self) -> str:
         return self.scenes[-1].mood if self.scenes else "mystery"
 
     def add_scene(self, text: str, direction: dict, choice: str) -> None:
-        self.scenes.append(Scene(text, direction["mood"], choice))
+        self.scenes.append(Scene(text, direction["mood"], choice, direction.get("sound", "silence")))
         self.choices = direction["choices"]
