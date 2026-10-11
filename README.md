@@ -30,6 +30,7 @@ python -m pytest                  # optional: run tests
 | Any other OpenAI-compatible server | `LLM_BASE_URL=...` and `OPENAI_API_KEY=...` |
 
 Each provider has a sensible default model (see `storyteller/config.py`). Restart the app after changing `.env`.
+`OPENAI_API_KEY` is only used for the OpenAI provider or a custom `LLM_BASE_URL`; it is never sent to another provider.
 
 ## Interpretation of "immersive"
 
@@ -52,7 +53,7 @@ storyteller/
   audio.js              Web Audio synthesis of the music and ambience (runs in the browser, no files or keys)
   llm.py                The only file that calls a model provider
   config.py             Settings from .env: providers, per-agent models, story length, critic thresholds
-tests/                  Network-free tests (parsing, session, HTML escaping, the critic loop, a full UI turn)
+tests/                  Network-free tests (parsing, messy model output, session, HTML escaping, the critic loop, key handling, a full UI turn)
 ENGINEERING_DECISIONS.md  Why it is built this way, with trade-offs
 ```
 
@@ -79,7 +80,7 @@ Any OpenAI-compatible provider: Anthropic Claude (`claude-sonnet-5-5`, `claude-h
 
 ## Known limitations / next steps
 
-- Local small models produce blander prose and sometimes weaker JSON; the parser tolerates fences but not all failures.
+- Local small models produce blander prose and sometimes weaker JSON; the parser tolerates fences, odd scores and malformed choices but not every failure; a failed turn shows only the error type (details are in the console) and can be retried.
 - Story state is in-browser-session only (no save/resume); the narrator re-reads the full history each scene (fine for 5 scenes, needs summarization for longer ones).
 - The critic adds latency (several LLM calls before a scene appears) and can only judge what the model can; it may still pass subtle inconsistencies.
 - The music and ambience are synthesised, so they sound artificial, not like recordings. Lifeline's real-time waiting between messages is not implemented.

@@ -33,8 +33,8 @@ incoherent, the narrator rewrites using the critic's issues and fix, up to `MAX_
 is shown. Details that matter:
 - An incoherent draft is ranked 3 points lower than its score (`INCOHERENCE_PENALTY`), so a flowery but contradictory
   draft can't beat a plain consistent one.
-- If the critic call fails (network, bad JSON), the current draft is shown. A quality feature must not be able to
-  break the product.
+- If the critic call fails (network, bad JSON), the current draft is shown, unless an earlier draft was already
+  scored, in which case that best one is kept. A quality feature must not be able to break the product.
 - The loop is a generator. It yields status lines ("The critic is reviewing draft 2...") so the UI is not a blank
   wait, then yields the finished scene as its last item.
 
@@ -66,6 +66,8 @@ name. `config.py` maps roles to models and providers to endpoints:
 - `STORY_MODEL` sets one model for every agent; `PLANNER_MODEL`, `NARRATOR_MODEL`, `CRITIC_MODEL`, `DIRECTOR_MODEL`,
   `SAFETY_MODEL` override single agents (e.g. a stronger model as critic).
 - `LLM_BASE_URL` points at any other OpenAI-compatible server.
+- `OPENAI_API_KEY` is used as a fallback key only for the OpenAI provider or when `LLM_BASE_URL` is set. It is never
+  sent to Groq, Claude or Hugging Face, so a leftover key cannot leak to the wrong company.
 Every supported provider speaks the OpenAI chat API, so there is one client and no per-provider code paths.
 *Cost:* only features common to that API are used (chat + JSON mode). Provider-specific features (e.g. image or voice
 models) were left out.
@@ -81,9 +83,12 @@ refused, the page stays as it was (the last reply buttons come back) so the play
 
 ## 8. JSON from models is parsed defensively
 
-`llm.extract_json()` accepts fenced or chatter-wrapped JSON because smaller models do that. Mood values are validated
-against `MOODS`; choices are truncated to 2 and emptied on the final scene; the ambience must be one of `SOUNDS` or it becomes silence. The code assumes model output can be
-slightly wrong and corrects it rather than crashing.
+`llm.extract_json()` accepts fenced or chatter-wrapped JSON because smaller models do that, and rejects anything that is
+not a JSON object. Then `agents.py` corrects what is slightly wrong instead of crashing:
+- the mood must be in `MOODS`; the ambience must be in `SOUNDS` or it becomes silence;
+- choices are truncated to 2 and emptied on the final scene; on any other scene, missing or malformed choices are replaced
+  by "Keep going" / "Wait and see", so the story never dead-ends early;
+- the critic's score may be `8`, `8.5` or `"8/10"` (anything unreadable counts as 0); `issues` and `choices` must be lists.
 
 ## 9. Mood drives the interface, not generated media
 
@@ -102,13 +107,17 @@ lines of ordinary Python in `pipeline.py` and `agents.py`, which is easier to re
 
 `tests/test_core.py` runs without any network: JSON extraction, session logic, HTML escaping, mood/name/prologue rendering, the critic loop
 (reject-then-approve, give up and keep the best draft, incoherent-draft ranking, broken critic), the strict `coherent`
-flag, provider switching, the director's ambience fallback, the channel shown on the page, and one UI turn (success, and failure with the choices restored), messy model output, and that the OpenAI key is never sent to another provider. Model calls are
+flag, provider switching, the director's ambience fallback, the channel shown on the page, messy model output (odd scores,
+non-list choices, a JSON array), that the OpenAI key is never sent to another provider, and one UI turn (success, and failure
+with the choices restored). Model calls are
 replaced with fakes (`monkeypatch`), so the tests check *our* control flow, not a model's output. Output *quality* is
 checked by running the app, not by unit tests.
 
 ## 12. Secrets
 
 Keys live only in `.env` (git-ignored). `.env.example` is the committed template. Keys are read once in `config.py`.
+When a turn fails, the player sees only the error type (`app.explain`); the details go to the console, so a provider's
+error text is never shown on the page.
 
 ## 13. The story is a chat with a character, through an invented channel
 
