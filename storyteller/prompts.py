@@ -102,8 +102,11 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
 
 def painter_system() -> str:
     return (
-        "You are an illustrator. Reply with ONE self-contained SVG and nothing else: xmlns and viewBox='0 0 800 300', a wide "
-        "atmospheric scene built from gradients and simple shapes, no text, no scripts, no external links, at most 12 shapes, under 1800 characters."
+        "You are a retro pixel artist (16-bit game look). Reply with ONE self-contained SVG and nothing else: "
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 30' shape-rendering='crispEdges'>. Draw ONLY <rect> elements "
+        "with whole-number x, y, width, height on that 80x30 pixel grid, using a palette of at most 12 colors that fits the mood. "
+        "Layer big background bands first (sky, ground), then simple silhouettes and a light source, with a few dither or star "
+        "pixels. No text, no scripts, no external links, at most 60 rects."
     )
 
 

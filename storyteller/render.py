@@ -26,7 +26,7 @@ CSS = "\n".join(
 .stage .msg { max-width:78%; margin:0 0 8px; padding:9px 14px; border-radius:18px 18px 18px 4px; background:rgba(255,255,255,.14);
   font:1rem/1.45 system-ui,sans-serif; }
 .stage .me { margin-left:auto; border-radius:18px 18px 4px 18px; background:#2f7df6; color:#fff; }
-.stage .art { width:100%; border-radius:10px; margin:0 0 14px; position:relative; }
+.stage .art { image-rendering:pixelated; width:100%; border-radius:10px; margin:0 0 14px; position:relative; }
 .stage details { opacity:.7; margin-bottom:18px; position:relative; }
 .stage .prologue { opacity:.95; padding:14px 18px; margin-bottom:22px; border-left:3px solid rgba(255,255,255,.35);
   background:rgba(0,0,0,.18); border-radius:0 10px 10px 0; position:relative; }
