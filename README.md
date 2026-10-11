@@ -84,7 +84,3 @@ Any OpenAI-compatible provider: Anthropic Claude (`claude-sonnet-5-5`, `claude-h
 - The critic adds latency (several LLM calls before a scene appears) and can only judge what the model can; it may still pass subtle inconsistencies.
 - The music and ambience are synthesised, so they sound artificial, not like recordings. Lifeline's real-time waiting between messages is not implemented.
 - Next: recorded audio, persistent characters/inventory state, user-selectable genre/length, critic checks across the whole story (not just per scene).
-
-## Demonstration
-
-_Add the link to your screen recording here before submitting._

@@ -15,7 +15,7 @@ def story(monkeypatch):
     for name, value in (("MAX_SCENES", 3), ("MAX_REVISIONS", 2), ("CRITIC_MIN_SCORE", 8)):
         monkeypatch.setattr(config, name, value)
     monkeypatch.setattr(agents, "direct", lambda *a, **k: {"mood": "calm", "choices": []})
-    return StorySession("t", {"title": "T", "arc": ["a", "b", "c"]})
+    return StorySession({"title": "T", "arc": ["a", "b", "c"]})
 
 
 def run_scene(monkeypatch, story, drafts, verdicts):
@@ -46,7 +46,7 @@ def test_session_tracks_last_scene_mood_and_choices(story):
 
 
 def test_render_escapes_html_and_shows_mood_name_and_prologue():
-    s = StorySession("t", {"title": "T", "protagonist_name": "Mara <b>", "channel": {"medium": "a mirror"}, "prologue": "You are in <i>Brinehaven</i>."})
+    s = StorySession({"title": "T", "protagonist_name": "Mara <b>", "channel": {"medium": "a mirror"}, "prologue": "You are in <i>Brinehaven</i>."})
     s.add_scene("<script>alert(1)</script>", {"mood": "danger", "choices": []}, "")
     html = render(s)
     assert "mood-danger" in html and "Mara &lt;b&gt;, via a mirror" in html and "Prologue" in html
@@ -122,3 +122,26 @@ def test_director_sound_must_be_known(monkeypatch, story):
     assert agents.direct(story, "x")["sound"] == "rain"
     story.add_scene("t", d, "")
     assert 'data-sound="silence"' in render(story)
+
+
+def test_messy_model_output_is_tolerated(monkeypatch, story):
+    monkeypatch.undo()
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: {"score": "8/10", "coherent": True, "issues": "oops"})
+    assert agents.critique(story, "t", "") == {"score": 8, "coherent": True, "issues": [], "fix": ""}
+    monkeypatch.setattr(llm, "chat", lambda *a, **k: {"mood": "calm", "choices": "abc"})
+    assert agents.direct(story, "x")["choices"] == ["Keep going", "Wait and see"]  # never a dead end mid-story
+    with pytest.raises(ValueError):
+        extract_json("[1, 2]")
+
+
+def test_openai_key_is_not_sent_to_another_provider(monkeypatch):
+    for k in ("LLM_BASE_URL", "GROQ_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: None)
+    monkeypatch.setenv("LLM_PROVIDER", "groq")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-secret")
+    try:
+        assert importlib.reload(config).API_KEY == "local"
+    finally:
+        monkeypatch.undo()
+        importlib.reload(config)

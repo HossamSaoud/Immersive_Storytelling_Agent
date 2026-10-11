@@ -18,12 +18,15 @@ def client() -> OpenAI:
 def extract_json(text: str) -> dict:
     """Parse a JSON object, tolerating code fences or chatter around it (smaller models do this)."""
     try:
-        return json.loads(text)
+        out = json.loads(text)
     except json.JSONDecodeError:
         match = re.search(r"\{.*\}", text, re.DOTALL)
         if not match:
             raise ValueError(f"No JSON object in model output: {text[:200]!r}")
-        return json.loads(match.group(0))
+        out = json.loads(match.group(0))
+    if not isinstance(out, dict):
+        raise ValueError(f"Expected a JSON object, got: {text[:200]!r}")
+    return out
 
 
 def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False, max_tokens: int = 2048):

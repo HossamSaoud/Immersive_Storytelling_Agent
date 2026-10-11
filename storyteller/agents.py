@@ -2,16 +2,28 @@
 
   is_allowed  Safety    request / typed action -> bool
   plan        Planner   request                -> StorySession holding the story bible
-  narrate     Narrator  session + action       -> one scene of prose (or a rewrite of a rejected draft)
+  narrate     Narrator  session + action       -> 5-8 chat messages (or a rewrite of a rejected draft)
   critique    Critic    session + draft        -> {score, coherent, issues, fix}
-  direct      Director  session + scene        -> {mood, choices}
+  direct      Director  session + scene        -> {mood, sound, choices}
 
 They share state only through StorySession (story.py). How narrate and critique are chained is in pipeline.py.
 """
+import re
+
 from . import config, llm, prompts
 from .story import MOODS, SOUNDS, StorySession
 
 REFUSAL = "I can't weave a story around that. Try another idea - a mystery, a voyage, a strange city?"
+
+
+def _as_list(v) -> list:
+    return v if isinstance(v, list) else []
+
+
+def _score(v) -> int:
+    """Models write 8, 8.5 or '8/10'; anything unreadable counts as 0."""
+    m = re.match(r"\s*(\d+(?:\.\d+)?)", str(v))
+    return int(float(m.group(1))) if m else 0
 
 
 def is_allowed(text: str) -> bool:
@@ -26,7 +38,7 @@ def is_allowed(text: str) -> bool:
 
 def plan(topic: str) -> StorySession:
     bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True)
-    return StorySession(topic=topic, bible=bible)
+    return StorySession(bible=bible)
 
 
 def narrate(session: StorySession, choice: str, draft: str = "", notes: str = "") -> str:
@@ -40,9 +52,9 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
     out = llm.chat("critic", prompts.critic_system(session.is_last),
                    prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True)
     return {
-        "score": int(out.get("score", 0)),
+        "score": _score(out.get("score")),
         "coherent": out.get("coherent") is True,  # bool("false") is True, so accept only a real JSON true
-        "issues": [str(i) for i in out.get("issues", [])],
+        "issues": [str(i) for i in _as_list(out.get("issues"))],
         "fix": str(out.get("fix", "")),
     }
 
@@ -54,5 +66,5 @@ def direct(session: StorySession, scene_text: str) -> dict:
     return {
         "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
         "sound": out.get("sound") if out.get("sound") in SOUNDS else "silence",
-        "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:2],
+        "choices": [] if session.is_last else [str(c) for c in _as_list(out.get("choices"))][:2] or ["Keep going", "Wait and see"],
     }

@@ -32,7 +32,7 @@ if LLM_PROVIDER not in PROVIDERS:
 _base_url, _key_env, _default_model = PROVIDERS[LLM_PROVIDER]
 
 LLM_BASE_URL = os.getenv("LLM_BASE_URL") or _base_url
-API_KEY = (_key_env and os.getenv(_key_env)) or os.getenv("OPENAI_API_KEY") or "local"
+API_KEY = (_key_env and os.getenv(_key_env)) or (os.getenv("OPENAI_API_KEY") if os.getenv("LLM_BASE_URL") else None) or "local"  # never send the OpenAI key to another provider
 
 WORKSPACE_ID = os.getenv("ANTHROPIC_WORKSPACE_ID")  # only needed for Anthropic keys that are not scoped to a workspace
 

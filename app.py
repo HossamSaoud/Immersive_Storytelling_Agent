@@ -34,7 +34,7 @@ def explain(e: Exception) -> str:
         return f"No API key found for provider '{config.LLM_PROVIDER}'. Add it to .env and restart the app."
     if getattr(e, "status_code", None) == 429:
         return "The model provider's rate limit was reached (free tiers have daily token caps). Wait a while, or switch provider or model in .env, then try again."
-    return f"The storyteller hit a problem ({type(e).__name__}: {str(e)[:160]}). Please try again."
+    return f"The storyteller hit a problem ({type(e).__name__}). Please try again; the details are in the console."
 
 
 def take_turn(session, text):

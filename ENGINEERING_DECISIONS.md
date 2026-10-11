@@ -77,7 +77,7 @@ models) were left out.
 2. **Content rules** inside the planner, narrator and director prompts, so unsafe text is also discouraged at generation time.
 Later turns are the app's own two buttons (there is no free-text box), so they are not screened again. An earlier
 version screened them and the judge sometimes refused harmless buttons. If a model call fails or the request is
-refused, the player's last choices are shown again so they can retry.
+refused, the page stays as it was (the last reply buttons come back) so the player can retry.
 
 ## 8. JSON from models is parsed defensively
 
@@ -102,7 +102,7 @@ lines of ordinary Python in `pipeline.py` and `agents.py`, which is easier to re
 
 `tests/test_core.py` runs without any network: JSON extraction, session logic, HTML escaping, mood/name/prologue rendering, the critic loop
 (reject-then-approve, give up and keep the best draft, incoherent-draft ranking, broken critic), the strict `coherent`
-flag, provider switching, the director's ambience fallback, the channel shown on the page, and one UI turn (success, and failure with the choices restored). Model calls are
+flag, provider switching, the director's ambience fallback, the channel shown on the page, and one UI turn (success, and failure with the choices restored), messy model output, and that the OpenAI key is never sent to another provider. Model calls are
 replaced with fakes (`monkeypatch`), so the tests check *our* control flow, not a model's output. Output *quality* is
 checked by running the app, not by unit tests.
 

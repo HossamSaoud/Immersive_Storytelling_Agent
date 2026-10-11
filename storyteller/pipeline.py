@@ -24,7 +24,9 @@ def write_scene(session, choice: str):
             verdict = agents.critique(session, draft, choice)
         except Exception as e:
             print(f"[critic] review failed: {e}")
-            best, verdict = draft, None
+            verdict = None
+            if best_rank < 0:
+                best = draft  # only fall back to this draft if no earlier one was scored
             break
         rank = verdict["score"] - (0 if verdict["coherent"] else INCOHERENCE_PENALTY)
         if rank > best_rank:
