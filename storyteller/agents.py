@@ -25,21 +25,20 @@ def is_allowed(text: str) -> bool:
 
 
 def plan(topic: str) -> StorySession:
-    trace = []
-    bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True, trace=trace)
-    return StorySession(topic=topic, bible=bible, trace=trace)
+    bible = llm.chat("planner", prompts.planner_system(), prompts.planner_user(topic), as_json=True)
+    return StorySession(topic=topic, bible=bible)
 
 
 def narrate(session: StorySession, choice: str, draft: str = "", notes: str = "") -> str:
     """Write the next scene. Pass the rejected `draft` and the critic's `notes` to rewrite instead."""
     return llm.chat("narrator", prompts.narrator_system(session.is_last),
-                    prompts.narrator_user(session, choice, draft, notes), temperature=0.95, trace=session.trace)
+                    prompts.narrator_user(session, choice, draft, notes), temperature=0.95)
 
 
 def critique(session: StorySession, scene_text: str, choice: str) -> dict:
     """Returns {score: 1-10, coherent, issues, fix}. Raises if the critic call itself fails."""
     out = llm.chat("critic", prompts.critic_system(session.is_last),
-                   prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True, trace=session.trace)
+                   prompts.critic_user(session, scene_text, choice), temperature=0.2, as_json=True)
     return {
         "score": int(out.get("score", 0)),
         "coherent": out.get("coherent") is True,  # bool("false") is True, so accept only a real JSON true
@@ -51,7 +50,7 @@ def critique(session: StorySession, scene_text: str, choice: str) -> dict:
 def direct(session: StorySession, scene_text: str) -> dict:
     """Returns {mood, choices}. The final scene gets no choices - the story is over."""
     out = llm.chat("director", prompts.director_system(), prompts.director_user(session, scene_text),
-                   temperature=0.6, as_json=True, trace=session.trace)
+                   temperature=0.6, as_json=True)
     return {
         "mood": out.get("mood") if out.get("mood") in MOODS else "mystery",
         "choices": [] if session.is_last else [str(c) for c in out.get("choices", [])][:2],

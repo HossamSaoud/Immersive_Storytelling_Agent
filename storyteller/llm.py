@@ -26,7 +26,7 @@ def extract_json(text: str) -> dict:
         return json.loads(match.group(0))
 
 
-def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False, max_tokens: int = 2048, trace: list | None = None):
+def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False, max_tokens: int = 2048):
     """Ask `role`'s model. Returns the text, or a dict when as_json=True."""
     claude = config.LLM_PROVIDER == "anthropic"  # its endpoint rejects `temperature` and json_object, and thinks by default; extract_json copes without
     model = config.MODELS[role]
@@ -38,7 +38,5 @@ def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: b
         **({"response_format": {"type": "json_object"}} if as_json and not claude else {}),
         **({"extra_body": {"thinking": {"type": "disabled" if "haiku" in model else "between_tools"}}} if claude else {}),  # Haiku and Sonnet name "no thinking" differently
     )
-    if trace is not None and resp.usage:  # the page's "Behind the scenes" list
-        trace.append(f"{role} ({model}): {resp.usage.prompt_tokens} tokens in, {resp.usage.completion_tokens} out")
     text = (resp.choices[0].message.content or "").strip()
     return extract_json(text) if as_json else text

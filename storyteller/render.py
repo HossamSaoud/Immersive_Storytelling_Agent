@@ -58,7 +58,5 @@ def render(session: StorySession | None, writing: bool = False) -> str:
     prologue = (f'<details class="prologue"{" open" if len(scenes) <= 1 else ""}>'
                 f"<summary>Prologue &mdash; the world</summary>{_paras(session.prologue)}</details>") if session.prologue else ""
     summary = f"<details><summary>Earlier messages</summary><div class=\"chat\">{past}</div></details>" if past else ""
-    trace = ("<details class=\"trace\"><summary>Behind the scenes: what the agents did this turn</summary><ul>"
-             + "".join(f"<li>{html.escape(t)}</li>" for t in session.trace) + "</ul></details>") if session.trace else ""
     return (f'<div class="stage mood-{session.mood}"><h2>{html.escape(session.title)}</h2>'
-            f'<div class="tag">{session.mood}{who}</div>{prologue}{summary}<div class="chat">{current}</div>{trace}</div>')
+            f'<div class="tag">{session.mood}{who}</div>{prologue}{summary}<div class="chat">{current}</div></div>')

@@ -34,8 +34,6 @@ def explain(e: Exception) -> str:
 def take_turn(session, text):
     """Begin (session None, text = the story request) or continue (text = a chosen or typed action)."""
     text, before = (text or "").strip(), session
-    if session:
-        session.trace.clear()
     if not text:
         yield out(session)
         return
@@ -73,8 +71,7 @@ with gr.Blocks(css=CSS, title="Echoes - Immersive Storyteller") as demo:
             f"3. **Narrator** ({config.MODELS['narrator']}) writes the character's chat messages.\n"
             f"4. **Critic** ({config.MODELS['critic']}) scores each draft. A weak draft is rewritten (up to {config.MAX_REVISIONS} time(s)) "
             "and you never see the rejected one.\n"
-            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n\n"
-            "Open **Behind the scenes** under the story to see what each helper did on the latest turn, with token counts.")
+            f"5. **Director** ({config.MODELS['director']}) picks the mood colour and your two reply options.\n")
     session = gr.State(None)
     with gr.Row():
         topic = gr.Textbox(label="Your story request", placeholder=EXAMPLES[0], scale=4)

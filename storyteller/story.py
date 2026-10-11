@@ -19,7 +19,6 @@ class StorySession:
     bible: dict  # planner output: title, world, protagonist_name, cast, conflict, prologue, arc (one beat per scene)
     scenes: list[Scene] = field(default_factory=list)
     choices: list[str] = field(default_factory=list)  # buttons offered after the last scene
-    trace: list[str] = field(default_factory=list)  # what the agents did this turn, shown under the story
 
     @property
     def title(self) -> str:

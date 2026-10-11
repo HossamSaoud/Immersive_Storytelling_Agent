@@ -111,9 +111,3 @@ def test_failed_turn_keeps_session_and_choices_for_retry(monkeypatch, story):
     monkeypatch.setattr(pipeline, "write_scene", lambda s, c: (_ for _ in ()).throw(RuntimeError("down")))
     *_, last = app.take_turn(story, "go")
     assert last[0] is story and not story.scenes and last[3]["visible"] and "problem" in last[2]
-
-
-def test_render_shows_what_the_agents_did(story):
-    story.trace += ["critic (m): 5 tokens in, 2 out", "<b>x</b>"]
-    html = render(story)
-    assert "Behind the scenes" in html and "critic (m): 5 tokens in" in html and "<b>x</b>" not in html
