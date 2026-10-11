@@ -72,7 +72,7 @@ instead of generated media, and no agent framework.
 
 I used Claude Code to scaffold and write the code. The following were my own decisions: the interpretation of immersion (the four layers above),
 the planner/narrator/director split, mood-driven UI, the scene limit, the safety layering, and the choice of an OpenAI-compatible abstraction.
-I reviewed and tested the generated code (unit tests plus live end-to-end runs against Groq's `openai/gpt-oss-120b`).
+I reviewed and tested the generated code (unit tests plus live end-to-end runs). I first tested it against Groq's `openai/gpt-oss-120b`, then moved to Claude (Sonnet and Haiku) for better results, and Claude is now the default in my `.env`.
 
 ## External services, models, libraries
 
