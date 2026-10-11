@@ -7,9 +7,17 @@
   director_*               agents.direct       -> JSON mood + choices
 """
 import json
+import random
 
 from . import config
 from .story import MOODS, SOUNDS, StorySession
+
+CHANNELS = [  # inspiration only: the planner is told to pick one or invent a better fit
+    "a diary whose pages write back", "letters left in a hollow tree", "messages in bottles on the tide", "a haunted mirror",
+    "a ship's telegraph", "a seashell you hold to your ear", "notes slipped under your door", "a pigeon post", "a talking painting",
+    "a dream you both share", "a music box that spells words", "a pipe organ's keys", "frost writing on a window", "a lantern that blinks code",
+    "an old typewriter that types by itself", "a candle flame that bends into words", "a library book with new margin notes",
+]
 
 CONTENT_RULES = (
     "Keep content suitable for a general audience: no graphic violence, sexual content, hate, or real "
@@ -34,14 +42,15 @@ def planner_system() -> str:
         "supporting_cast (2-3 PEOPLE or creatures, never objects: {name, role, relationship_to_you}, each with a distinct name), "
         "central_conflict (the problem, who or what opposes you, and what is lost if you fail), "
         "motifs (3 recurring images/sounds/smells), "
-        "prologue (100-150 words addressed to the reader as 'you': why only you can hear this character (a radio, a phone, a "
-        "signal), where the character is, what just happened and what is at stake - clear, no riddles), "
+        "channel ({medium: 2-5 words naming the odd or beautiful way this character's words reach the reader, fitted to the world (NOT a radio or phone "
+        "unless the story truly demands it), why_you: why only the reader receives it, look: how the messages look and sound in that medium}), "
+        "prologue (100-150 words addressed to the reader as 'you': how and why only you receive this character's messages through that channel, where the character is, what just happened and what is at stake - clear, no riddles), "
         f"arc (exactly {config.MAX_SCENES} one-sentence beats; the last beat resolves the story)}}."
     )
 
 
 def planner_user(topic: str) -> str:
-    return f"Story request: {topic}"
+    return f"Story request: {topic}\nChannel ideas (pick one or invent a better fit): {'; '.join(random.sample(CHANNELS, 3))}"
 
 
 def _context(s: StorySession) -> str:
@@ -60,7 +69,7 @@ def narrator_system(is_last: bool) -> str:
     )
     return (
         "You write one chunk of a live text chat. You ARE the character (protagonist_name in the bible) messaging the reader, "
-        "who is your only contact. Write in first person, present tense, as 5-8 SHORT chat messages (each 1-2 sentences, "
+        "who is your only contact, through the channel in the bible: keep that medium's look and voice (a telegram is terse, a diary is intimate, a mirror writes in fragments) but ALWAYS as 5-8 short messages. Write in first person, present tense, as 5-8 SHORT chat messages (each 1-2 sentences, "
         "natural and a little breathless), separated by a blank line. Total 80-150 words. Tell the reader what you see, "
         "hear and feel and what just happened. Address the reader directly, react to what they told you, and never repeat "
         "the prologue. Introduce any new person or place with a name and a clear tag. Stay consistent with the story bible "
@@ -86,7 +95,7 @@ def critic_system(is_last: bool) -> str:
         "contradictions or characters/items appearing from nowhere; (2) causality - events follow logically, and the "
         "reader's reply is honored with visible consequences; (3) arc - it delivers this scene's beat"
         + (" and fully resolves the conflict (it is the final scene)" if is_last else " and ends on an open moment")
-        + "; (4) voice - first person from the character, present tense, short natural chat messages, concrete detail; "
+        + "; (4) voice - first person from the character, present tense, short messages that fit the bible's channel, concrete detail; "
         "(5) clarity - a reader who knows only the prologue and the history can tell who is speaking and what is happening right now; "
         "a new person or term needs a few words of context, not a full explanation (this is a short chat, not an essay); penalize only genuine confusion; "
         "(6) format - 5-8 short messages separated by blank lines, no headings, option lists or narration. "

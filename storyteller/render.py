@@ -54,7 +54,9 @@ def render(session: StorySession | None, writing: bool = False) -> str:
     past = "".join(_scene(s) for s in (scenes if writing else scenes[:-1]))
     current = '<div class="msg"><span class="cursor"></span></div>' if writing else (f'<div class="current">{_scene(scenes[-1])}</div>' if scenes else "")
     name = session.bible.get("protagonist_name")
-    who = f" &middot; chatting with {html.escape(str(name))}" if name else ""
+    channel = session.bible.get("channel")
+    medium = channel.get("medium") if isinstance(channel, dict) else None
+    who = (f" &middot; {html.escape(str(name))}" + (f", via {html.escape(str(medium))}" if medium else "")) if name else ""
     prologue = (f'<details class="prologue"{" open" if len(scenes) <= 1 else ""}>'
                 f"<summary>Prologue &mdash; the world</summary>{_paras(session.prologue)}</details>") if session.prologue else ""
     summary = f"<details><summary>Earlier messages</summary><div class=\"chat\">{past}</div></details>" if past else ""

@@ -46,10 +46,10 @@ def test_session_tracks_last_scene_mood_and_choices(story):
 
 
 def test_render_escapes_html_and_shows_mood_name_and_prologue():
-    s = StorySession("t", {"title": "T", "protagonist_name": "Mara <b>", "prologue": "You are in <i>Brinehaven</i>."})
+    s = StorySession("t", {"title": "T", "protagonist_name": "Mara <b>", "channel": {"medium": "a mirror"}, "prologue": "You are in <i>Brinehaven</i>."})
     s.add_scene("<script>alert(1)</script>", {"mood": "danger", "choices": []}, "")
     html = render(s)
-    assert "mood-danger" in html and "chatting with Mara &lt;b&gt;" in html and "Prologue" in html
+    assert "mood-danger" in html and "Mara &lt;b&gt;, via a mirror" in html and "Prologue" in html
     assert "<script>" not in html and "<i>" not in html
 
 
