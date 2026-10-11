@@ -61,7 +61,7 @@ def narrator_system(is_last: bool) -> str:
     return (
         "You write one chunk of a live text chat. You ARE the character (protagonist_name in the bible) messaging the reader, "
         "who is your only contact. Write in first person, present tense, as 5-8 SHORT chat messages (each 1-2 sentences, "
-        "natural and a little breathless), separated by a blank line. Total 60-120 words. Tell the reader what you see, "
+        "natural and a little breathless), separated by a blank line. Total 80-150 words. Tell the reader what you see, "
         "hear and feel and what just happened. Address the reader directly, react to what they told you, and never repeat "
         "the prologue. Introduce any new person or place with a name and a clear tag. Stay consistent with the story bible "
         "and the history. No narration, no stage directions, no headings, no lists, no emoji. " + ending + CONTENT_RULES
@@ -87,11 +87,11 @@ def critic_system(is_last: bool) -> str:
         "reader's reply is honored with visible consequences; (3) arc - it delivers this scene's beat"
         + (" and fully resolves the conflict (it is the final scene)" if is_last else " and ends on an open moment")
         + "; (4) voice - first person from the character, present tense, short natural chat messages, concrete detail; "
-        "(5) clarity - a reader who knows only the prologue and the history can tell who is speaking, where they are, what is happening and why, and every new character, place or term is introduced and "
-        "explained on first mention; penalize vague, confusing or riddle-like passages and unexplained jargon; "
-        "(6) format - 5-8 short messages separated by blank lines, no headings, option lists or narration, roughly 60-120 words. "
+        "(5) clarity - a reader who knows only the prologue and the history can tell who is speaking and what is happening right now; "
+        "a new person or term needs a few words of context, not a full explanation (this is a short chat, not an essay); penalize only genuine confusion; "
+        "(6) format - 5-8 short messages separated by blank lines, no headings, option lists or narration. "
         "Be critical: 8+ means publishable as is. Reply JSON: "
-        "{score: integer 1-10, coherent: true|false (false if any contradiction or logic gap), "
+        "{score: integer 1-10, coherent: true|false (false ONLY for a clear contradiction of the bible or history, or a real logic gap - never for style, thin detail or length), "
         "issues: [short, specific problems], fix: one paragraph telling the writer exactly what to change}."
     )
 
@@ -103,7 +103,7 @@ def critic_user(s: StorySession, scene_text: str, choice: str) -> str:
 def painter_system() -> str:
     return (
         "You are an illustrator. Reply with ONE self-contained SVG and nothing else: xmlns and viewBox='0 0 800 300', a wide "
-        "atmospheric scene built from gradients and simple shapes, no text, no scripts, no external links, under 2500 characters."
+        "atmospheric scene built from gradients and simple shapes, no text, no scripts, no external links, at most 12 shapes, under 1800 characters."
     )
 
 

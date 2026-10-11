@@ -28,12 +28,15 @@ def extract_json(text: str) -> dict:
 
 def chat(role: str, system: str, user: str, temperature: float = 0.8, as_json: bool = False, max_tokens: int = 2048):
     """Ask `role`'s model. Returns the text, or a dict when as_json=True."""
+    claude = config.LLM_PROVIDER == "anthropic"  # its endpoint rejects `temperature` and json_object, and thinks by default; extract_json copes without
+    model = config.MODELS[role]
     resp = client().chat.completions.create(
-        model=config.MODELS[role],
+        model=model,
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-        temperature=temperature,
         max_tokens=max_tokens,
-        **({"response_format": {"type": "json_object"}} if as_json else {}),
+        **({} if claude else {"temperature": temperature}),
+        **({"response_format": {"type": "json_object"}} if as_json and not claude else {}),
+        **({"extra_body": {"thinking": {"type": "disabled" if "haiku" in model else "between_tools"}}} if claude else {}),  # Haiku and Sonnet name "no thinking" differently
     )
     text = (resp.choices[0].message.content or "").strip()
     return extract_json(text) if as_json else text
