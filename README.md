@@ -83,14 +83,6 @@ Any OpenAI-compatible provider: Anthropic Claude (`claude-sonnet-5-5`, `claude-h
 - Local small models produce blander prose and sometimes weaker JSON; the parser tolerates fences, odd scores and malformed choices but not every failure; a failed turn shows only the error type (details are in the console) and can be retried.
 - Story state is in-browser-session only (no save/resume); the narrator re-reads the full history each scene (fine for 5 scenes, needs summarization for longer ones).
 - The critic adds latency (several LLM calls before a scene appears) and can only judge what the model can; it may still pass subtle inconsistencies.
-- The music and ambience are synthesised, so they sound artificial, not like recordings. Lifeline's real-time waiting between messages is not implemented.
+- The music and ambience are synthesised, so they sound artificial, not like recordings.
 - Next: recorded audio, persistent characters/inventory state, user-selectable genre/length, critic checks across the whole story (not just per scene).
 
-## Demonstration
-
-Two screen recordings of the running prototype are in `demo/` (1080p, about 7 minutes each, recorded in real time, so the pauses are the models working):
-
-| File | Story request | What it shows |
-|---|---|---|
-| `demo/demo_1_astronaut_on_an_alien_moon.mp4` | "An astronaut stranded on an alien moon" | A character messaging through a decaying relay beacon, with replies steering the story. The page changes colour with the mood (mystery, tense, danger). |
-| `demo/demo_2_duke_second_son.mp4` | "reincarnated in a new world as a magical genius and son of the duke" | A different genre with its own message channel and mood colours. |
