@@ -53,7 +53,25 @@
     return { stop() { out.gain.linearRampToValueAtTime(0, ctx.currentTime + 2); timers.forEach(clearInterval); setTimeout(() => nodes.forEach((n) => n.stop()), 2500); } };
   };
 
+  const thump = (out, v, t0) => {  // one soft low drum hit
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + t0;
+    o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.2);  // starts higher so laptop speakers still carry it
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4);
+  };
+
+  // Tense: a low unresolved drone (a minor second and a tritone grind against each other), a heartbeat, a faint high squeal now and then.
+  const startTense = () => play((out) => {
+    const low = filtered("lowpass", 320, 0.8, out);
+    const drone = [55, 58.3, 77.8, 110, 116.6].map((f, i) => tone("sine", f, low, [0.5, 0.5, 0.25, 0.15, 0.15][i]));
+    const swell = lfo(0.09, 0.15, out.gain);
+    const beat = setInterval(() => { thump(out, 0.7, 0); thump(out, 0.4, 0.24); }, 1050);
+    const squeal = setInterval(() => { if (Math.random() < 0.5) blip(1480 + Math.random() * 60, out, 0.012, 3); }, 4500);
+    return [[...drone, swell], [beat, squeal]];
+  });
+
   const startMusic = (mood) => {
+    if (mood === "tense") return startTense();
     const [scale, root, every, wave, vol] = MUSIC[mood] || MUSIC.mystery;
     return play((out) => {
       const pad = filtered("lowpass", 700, 0.7, out);
