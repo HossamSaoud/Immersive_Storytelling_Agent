@@ -1,10 +1,10 @@
 """EVERY prompt the app sends to a model lives in this file. To change how stories read, edit here.
 
   SAFETY_SYSTEM            agents.is_allowed   -> {"allowed": bool}
-  planner_*                agents.plan         -> JSON story bible
-  narrator_*               agents.narrate      -> prose scene (or a rewrite of a rejected draft)
+  planner_*                agents.plan         -> JSON story bible (incl. the character's message channel)
+  narrator_*               agents.narrate      -> a chunk of 5-8 chat messages (or a rewrite of a rejected draft)
   critic_*                 agents.critique     -> JSON verdict
-  director_*               agents.direct       -> JSON mood + choices
+  director_*               agents.direct       -> JSON mood + ambience + 2 reply choices
 """
 import json
 import random

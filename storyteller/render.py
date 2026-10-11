@@ -1,4 +1,5 @@
-"""HTML + CSS for the stage. The mood class on .stage is what makes the atmosphere react to the story."""
+"""HTML + CSS for the stage: chat bubbles for the character's messages and your replies. The mood class on .stage tints the page,
+and its data-mood / data-sound attributes are what audio.js reads to pick the music and ambience."""
 import html
 
 from .story import StorySession

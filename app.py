@@ -1,6 +1,7 @@
 """Gradio front end - the only file that knows about the web UI. Run: python app.py
 
-One click -> take_turn() -> safety check -> (plan the story on the first turn) -> pipeline.write_scene() (narrator <-> critic).
+One click -> take_turn() -> safety check (first request only) -> (plan the story on the first turn) -> pipeline.write_scene() (narrator <-> critic).
+Sound and music are played by storyteller/audio.js in the browser; the page just hands it the mood and ambience.
 Each yield re-renders the page, which is how status lines like "The critic is reviewing..." appear live.
 """
 from pathlib import Path

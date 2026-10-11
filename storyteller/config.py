@@ -4,6 +4,7 @@ HOW TO SWITCH MODELS (edit .env only, no code):
   LLM_PROVIDER=anthropic         anthropic | openai | groq | huggingface | ollama  (picks endpoint, key variable, default model)
   STORY_MODEL=<name>             one model for every agent
   CRITIC_MODEL=<name>            or give one agent its own: PLANNER_ / NARRATOR_ / CRITIC_ / DIRECTOR_ / SAFETY_MODEL
+With anthropic, Sonnet plans, writes and judges and Haiku directs and screens unless you override them.
 Any other OpenAI-compatible server: set LLM_BASE_URL (and OPENAI_API_KEY).
 """
 import os
